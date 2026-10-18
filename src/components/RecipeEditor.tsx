@@ -1,4 +1,7 @@
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 import {
   ArrowDown,
   ArrowLeft,
@@ -8,6 +11,8 @@ import {
   Save,
   Trash2,
   X,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import { categories, ingredients, teachers } from "../services/catalogue";
 import {
@@ -103,6 +108,22 @@ const moveItem = <T,>(items: T[], index: number, direction: -1 | 1) => {
   return next;
 };
 
+const formatVoiceInstruction = (value: string) => {
+  let formatted = value
+    .replace(/\b(full stop|period)\b/gi, ".")
+    .replace(/\bcomma\b/gi, ",")
+    .replace(/\bquestion mark\b/gi, "?")
+    .replace(/\bexclamation mark\b/gi, "!")
+    .replace(/\s+/g, " ")
+    .replace(/\s+([,.;!?])/g, "$1")
+    .replace(/([,;!?])(?=\S)/g, "$1 ")
+    .trim();
+  if (!formatted) return "";
+  formatted = formatted.charAt(0).toLocaleUpperCase() + formatted.slice(1);
+  if (!/[.!?]$/.test(formatted)) formatted += ".";
+  return formatted;
+};
+
 const validateImage = async (file: File): Promise<RecipeImageUpload> => {
   const extensions: Record<string, RecipeImageUpload["extension"]> = {
     "image/jpeg": "jpg",
@@ -193,8 +214,66 @@ export function RecipeEditor({
   >(null);
   const [, refreshCatalogue] = useState(0);
   const fieldRefs = useRef<Record<string, HTMLElement | null>>({});
+  const voiceStepRef = useRef<string | null>(null);
+  const voiceWasListening = useRef(false);
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition({ clearTranscriptOnListen: true });
 
   useDialogDismiss(Boolean(catalogueMode), () => setCatalogueMode(null));
+
+  useEffect(() => {
+    if (listening) {
+      voiceWasListening.current = true;
+      if (voiceStepRef.current && transcript.trim()) {
+        setDraft((current) => ({
+          ...current,
+          steps: current.steps.map((step) =>
+            step.id === voiceStepRef.current
+              ? { ...step, instruction: transcript }
+              : step,
+          ),
+        }));
+      }
+      return;
+    }
+    const stepId = voiceStepRef.current;
+    if (!stepId || !transcript.trim()) return;
+    voiceWasListening.current = false;
+    voiceStepRef.current = null;
+    setDraft((current) => ({
+      ...current,
+      steps: current.steps.map((step) =>
+        step.id === stepId
+          ? { ...step, instruction: formatVoiceInstruction(transcript) }
+          : step,
+      ),
+    }));
+  }, [listening, transcript]);
+
+  const startStepVoice = (stepId: string) => {
+    if (listening) {
+      void SpeechRecognition.stopListening();
+      return;
+    }
+    if (!browserSupportsSpeechRecognition) {
+      setError("Voice recording is not supported in this browser.");
+      return;
+    }
+    resetTranscript();
+    voiceStepRef.current = stepId;
+    setError("");
+    void SpeechRecognition.startListening({
+      continuous: false,
+      language: "en-IN",
+    }).catch(() => {
+      voiceStepRef.current = null;
+      setError("Voice recording could not start. Check microphone permission.");
+    });
+  };
 
   useEffect(() => {
     try {
@@ -912,7 +991,36 @@ export function RecipeEditor({
               <div className="step-editor-row" key={step.id}>
                 <span className="row-number">{index + 1}</span>
                 <label>
-                  <span>Instruction</span>
+                  <span className="step-instruction-label">
+                    <span>Instruction</span>
+                    <button
+                      type="button"
+                      className={
+                        listening && voiceStepRef.current === step.id
+                          ? "step-voice-button listening"
+                          : "step-voice-button"
+                      }
+                      onClick={() => startStepVoice(step.id)}
+                      disabled={
+                        saving ||
+                        (listening && voiceStepRef.current !== step.id)
+                      }
+                      aria-label={
+                        listening && voiceStepRef.current === step.id
+                          ? `Stop recording step ${index + 1}`
+                          : `Record step ${index + 1} by voice`
+                      }
+                    >
+                      {listening && voiceStepRef.current === step.id ? (
+                        <MicOff size={14} />
+                      ) : (
+                        <Mic size={14} />
+                      )}
+                      {listening && voiceStepRef.current === step.id
+                        ? "Stop recording"
+                        : "Voice record"}
+                    </button>
+                  </span>
                   <textarea
                     ref={(element) => {
                       fieldRefs.current[`steps.${index}`] = element;
