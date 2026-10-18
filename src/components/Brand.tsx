@@ -6,7 +6,7 @@ export function Brand({ compact = false }: { compact?: boolean }) {
       <span className="brand-mark">
         <img
           className="brand-logo"
-          src={publicAssetUrl("favicon.svg")}
+          src={publicAssetUrl("logo.png")}
           alt=""
           aria-hidden="true"
         />

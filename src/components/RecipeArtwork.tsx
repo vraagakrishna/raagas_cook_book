@@ -12,7 +12,7 @@ export function RecipeArtwork({ recipe }: { recipe: Recipe }) {
     <span className="recipe-placeholder" aria-hidden="true">
       <img
         className="recipe-placeholder-logo"
-        src={publicAssetUrl("favicon.svg")}
+        src={publicAssetUrl("logo.png")}
         alt=""
       />
     </span>
