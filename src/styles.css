@@ -78,6 +78,9 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   gap: 11px;
+  font-family: "DM Serif Display", serif;
+  font-size: 15px;
+  font-weight: 400;
   border: 0;
   background: none;
   padding: 0;
@@ -98,25 +101,28 @@ textarea:focus-visible {
   width: 100%;
   height: 100%;
 }
-.brand strong,
-.brand em {
-  display: block;
+.brand-name {
+  white-space: nowrap;
+  font-family: "DM Serif Display", serif;
+  font-size: 15px;
+}
+.brand-name strong,
+.brand-name em {
+  font-family: inherit;
+  display: inline;
   line-height: 1.05;
 }
-.brand strong {
-  font-family: "DM Serif Display", serif;
-  font-size: 20px;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-}
-.brand em {
-  color: var(--terracotta);
-  font-size: 10px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  font-style: normal;
+.brand-name strong {
+  font-size: inherit;
   font-weight: 700;
-  margin-top: 4px;
+}
+.brand-name em {
+  color: var(--terracotta);
+  font-size: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+  font-style: italic;
+  font-weight: 400;
 }
 .nav-links {
   display: flex;
@@ -2581,9 +2587,6 @@ footer a {
   .brand-mark {
     width: 37px;
     height: 37px;
-  }
-  .brand strong {
-    font-size: 18px;
   }
   .owner-button span,
   .owner-session span {

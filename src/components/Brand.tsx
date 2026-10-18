@@ -11,9 +11,14 @@ export function Brand({ compact = false }: { compact?: boolean }) {
           aria-hidden="true"
         />
       </span>
-      <span>
+      <span className="brand-name">
         <strong>Raaga’s</strong>
-        {!compact && <em>Cook Book</em>}
+        {!compact && (
+          <>
+            {"\u00a0"}
+            <em>Cook Book</em>
+          </>
+        )}
       </span>
     </>
   );
