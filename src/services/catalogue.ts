@@ -1,5 +1,4 @@
 import categoriesData from "../../data/categories.json";
-import ingredientsData from "../../data/ingredients.json";
 import teachersData from "../../data/teachers.json";
 import type { Ingredient, MasterRecord, Recipe } from "../types/models";
 import { validateCatalogue } from "../validation/catalogue";
@@ -8,10 +7,16 @@ const recipeFiles = import.meta.glob<Recipe>("../../data/recipes/*.json", {
   eager: true,
   import: "default",
 });
+const ingredientFiles = import.meta.glob<Ingredient>(
+  "../../data/ingredients/*.json",
+  { eager: true, import: "default" },
+);
 
 export const categories = categoriesData as MasterRecord[];
 export const teachers = teachersData as MasterRecord[];
-export const ingredients = ingredientsData as Ingredient[];
+export const ingredients = Object.values(ingredientFiles).sort((a, b) =>
+  a.english.localeCompare(b.english),
+);
 export const recipes = Object.values(recipeFiles).sort((a, b) =>
   a.id.localeCompare(b.id),
 );

@@ -276,6 +276,15 @@ Rules:
 
 - An ingredient image is uploaded once and reused by all recipes referencing that ingredient.
 
+- Each ingredient is stored independently in `data/ingredients/<ingredient-id>.json`,
+  so adding or editing an ingredient does not rewrite any other ingredient or
+  recipe JSON file. Catalogue saves
+  retry automatically when GitHub is still propagating the previous commit.
+
+- Catalogue commits identify the affected record in their message (for example,
+  `Add ingredient: Green chilli` or `Update category: Breakfast`). Recipe
+  commits likewise include the recipe name.
+
 - Recipes reference the ingredient ID, not a copy of its image.
 
 - As the owner types an ingredient, show matching autocomplete suggestions.
@@ -778,7 +787,7 @@ raagas_cook_book/
 ├── data/
 │   ├── recipes/
 │   │   └── <recipe-id>.json
-│   ├── ingredients.json
+│   ├── ingredients/
 │   ├── teachers.json
 │   └── categories.json
 ├── src/

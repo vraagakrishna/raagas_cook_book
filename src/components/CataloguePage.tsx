@@ -16,7 +16,9 @@ import {
 } from "../services/catalogue";
 import {
   saveCatalogueFile,
+  deleteIngredientFromGitHub,
   saveIngredientImage,
+  saveIngredientToGitHub,
   type CatalogueFile,
 } from "../services/githubRecipes";
 import type { Ingredient, MasterRecord } from "../types/models";
@@ -88,12 +90,44 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
     setError("");
     setErrorField(null);
   };
-  const save = async (next: (Ingredient | MasterRecord)[]) => {
+  const catalogueLabel =
+    kind === "ingredients"
+      ? "ingredient"
+      : kind === "teachers"
+        ? "teacher"
+        : "category";
+  const save = async (
+    next: (Ingredient | MasterRecord)[],
+    commitMessage: string,
+  ) => {
     setSaving(true);
     setError("");
     setMessage("");
     try {
-      await saveCatalogueFile(kind, next);
+      if (kind === "ingredients") {
+        const currentById = new Map(
+          records.map((record) => [record.id, record]),
+        );
+        const nextById = new Map(next.map((record) => [record.id, record]));
+        const addedOrEdited = next.find((record) => {
+          const previous = currentById.get(record.id);
+          return (
+            !previous || JSON.stringify(previous) !== JSON.stringify(record)
+          );
+        });
+        const removed = records.find((record) => !nextById.has(record.id));
+        if (addedOrEdited) {
+          await saveIngredientToGitHub(
+            addedOrEdited,
+            JSON.stringify(addedOrEdited, null, 2),
+            commitMessage,
+          );
+        } else if (removed) {
+          await deleteIngredientFromGitHub(removed.id, commitMessage);
+        }
+      } else {
+        await saveCatalogueFile(kind, next, commitMessage);
+      }
       records.splice(0, records.length, ...next);
       setMessage("Saved to GitHub.");
       return true;
@@ -161,7 +195,7 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
     let image = newImage.trim() || undefined;
     if (kind === "ingredients" && newImageFile) {
       try {
-        image = await saveIngredientImage(id, newImageFile);
+        image = await saveIngredientImage(id, newImageFile, value);
       } catch (caught) {
         setError(
           caught instanceof Error
@@ -192,7 +226,10 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
             : item,
         )
       : [...records, record as Ingredient | MasterRecord];
-    const saved = await save(next);
+    const saved = await save(
+      next,
+      `${editingRecord ? "Update" : "Add"} ${catalogueLabel}: ${value}`,
+    );
     if (!saved) {
       nameInputRef.current?.focus();
       return;
@@ -217,7 +254,10 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
         "This entry is used by a recipe. Update those recipes before deleting it.",
       );
     if (!window.confirm("Delete " + nameOf(record) + "?")) return;
-    await save(records.filter((r) => r.id !== record.id));
+    await save(
+      records.filter((r) => r.id !== record.id),
+      `Delete ${catalogueLabel}: ${nameOf(record)}`,
+    );
   };
   const speak = (record: Ingredient) => {
     if (speaking === record.id) {

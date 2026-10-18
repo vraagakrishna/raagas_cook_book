@@ -20,6 +20,7 @@ import {
   generateAvailableRecipeId,
   type RecipeImageUpload,
   saveCatalogueFile,
+  saveIngredientToGitHub,
   saveIngredientImage,
   saveRecipeToGitHub,
 } from "../services/githubRecipes";
@@ -1211,7 +1212,7 @@ function CatalogueManager({
     let image: string | undefined;
     if (mode === "ingredient" && imageFile) {
       try {
-        image = await saveIngredientImage(id, imageFile);
+        image = await saveIngredientImage(id, imageFile, trimmedName);
       } catch (caught) {
         setError(
           caught instanceof Error
@@ -1238,14 +1239,19 @@ function CatalogueManager({
     setSaving(true);
     try {
       const records = [...list, record];
-      await saveCatalogueFile(
-        mode === "ingredient"
-          ? "ingredients"
-          : mode === "teacher"
-            ? "teachers"
-            : "categories",
-        records,
-      );
+      if (mode === "ingredient") {
+        await saveIngredientToGitHub(
+          record,
+          JSON.stringify(record, null, 2),
+          `Add ingredient: ${trimmedName}`,
+        );
+      } else {
+        await saveCatalogueFile(
+          mode === "teacher" ? "teachers" : "categories",
+          records,
+          `Add ${label}: ${trimmedName}`,
+        );
+      }
       onSaved(record);
     } catch (caught) {
       setError(

@@ -148,11 +148,13 @@ const putFile = async ({
   content,
   message,
   sha,
+  conflictMessage,
 }: {
   path: string;
   content: string;
   message: string;
   sha?: string;
+  conflictMessage?: string;
 }) => {
   const response = await request(repositoryApiUrl(path), {
     method: "PUT",
@@ -166,7 +168,8 @@ const putFile = async ({
   });
   if (response.status === 409 || response.status === 422) {
     throw new GitHubConflictError(
-      "This recipe changed in GitHub after the editor was opened. Copy any unsaved text you need, reload the latest recipe, and try again.",
+      conflictMessage ??
+        "This recipe changed in GitHub after the editor was opened. Copy any unsaved text you need, reload the latest recipe, and try again.",
     );
   }
   if (response.status === 401 || response.status === 403) {
@@ -179,14 +182,18 @@ const putFile = async ({
   }
 };
 
-const saveCoverImage = async (recipeId: string, upload: RecipeImageUpload) => {
+const saveCoverImage = async (
+  recipeId: string,
+  upload: RecipeImageUpload,
+  recipeName: string,
+) => {
   const path = `public/images/recipes/${recipeId}.${upload.extension}`;
   const existing = await getFile(path);
   const bytes = new Uint8Array(await upload.file.arrayBuffer());
   await putFile({
     path,
     content: bytesToBase64(bytes),
-    message: `Add cover image for ${recipeId}`,
+    message: `Add cover image for recipe: ${recipeName}`,
     sha: existing?.sha,
   });
   return `./images/recipes/${recipeId}.${upload.extension}`;
@@ -196,6 +203,7 @@ const saveStepImage = async (
   recipeId: string,
   stepId: string,
   upload: RecipeImageUpload,
+  recipeName: string,
 ) => {
   const safeStepId = stepId.replace(/[^a-zA-Z0-9-]/g, "");
   const path = `public/images/recipes/${recipeId}-step-${safeStepId}.${upload.extension}`;
@@ -203,13 +211,17 @@ const saveStepImage = async (
   await putFile({
     path,
     content: bytesToBase64(new Uint8Array(await upload.file.arrayBuffer())),
-    message: `Add step image for ${recipeId}`,
+    message: `Add step image for recipe: ${recipeName}`,
     sha: existing?.sha,
   });
   return `./images/recipes/${recipeId}-step-${safeStepId}.${upload.extension}`;
 };
 
-export async function saveIngredientImage(ingredientId: string, file: File) {
+export async function saveIngredientImage(
+  ingredientId: string,
+  file: File,
+  ingredientName = ingredientId,
+) {
   const extensions: Record<string, "jpg" | "png" | "webp"> = {
     "image/jpeg": "jpg",
     "image/png": "png",
@@ -252,10 +264,44 @@ export async function saveIngredientImage(ingredientId: string, file: File) {
   await putFile({
     path,
     content: bytesToBase64(new Uint8Array(await file.arrayBuffer())),
-    message: `Add ingredient image for ${ingredientId}`,
+    message: `Add ingredient image for ingredient: ${ingredientName}`,
     sha: existing?.sha,
   });
   return `./images/ingredients/${ingredientId}.${extension}`;
+}
+
+export async function saveIngredientToGitHub(
+  ingredient: { id: string },
+  content: string,
+  commitMessage: string,
+): Promise<void> {
+  const path = `data/ingredients/${ingredient.id}.json`;
+  let lastConflict: GitHubConflictError | null = null;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const current = await getFile(path);
+    try {
+      await putFile({
+        path,
+        content: textToBase64(`${content.trim()}\n`),
+        message: commitMessage,
+        sha: current?.sha,
+        conflictMessage: `GitHub is still updating ingredient ${ingredient.id}. Please try saving again in a moment.`,
+      });
+      return;
+    } catch (error) {
+      if (!(error instanceof GitHubConflictError)) throw error;
+      lastConflict = error;
+      await new Promise((resolve) => setTimeout(resolve, 350 * (attempt + 1)));
+    }
+  }
+  throw lastConflict ?? new GitHubConflictError("Could not save ingredient.");
+}
+
+export async function deleteIngredientFromGitHub(
+  ingredientId: string,
+  commitMessage: string,
+): Promise<void> {
+  await deleteFile(`data/ingredients/${ingredientId}.json`, commitMessage);
 }
 
 export async function saveRecipeToGitHub({
@@ -286,7 +332,7 @@ export async function saveRecipeToGitHub({
   let savedRecipe = imageUpload
     ? {
         ...recipe,
-        coverImage: await saveCoverImage(recipe.id, imageUpload),
+        coverImage: await saveCoverImage(recipe.id, imageUpload, recipe.name),
       }
     : recipe;
   if (stepImageUploads && Object.keys(stepImageUploads).length) {
@@ -294,7 +340,15 @@ export async function saveRecipeToGitHub({
       savedRecipe.steps.map(async (step) => {
         const upload = stepImageUploads[step.id];
         return upload
-          ? { ...step, image: await saveStepImage(recipe.id, step.id, upload) }
+          ? {
+              ...step,
+              image: await saveStepImage(
+                recipe.id,
+                step.id,
+                upload,
+                recipe.name,
+              ),
+            }
           : step;
       }),
     );
@@ -315,13 +369,29 @@ export async function saveRecipeToGitHub({
 export async function saveCatalogueFile(
   kind: CatalogueFile,
   records: unknown[],
+  commitMessage = `Update ${kind} catalogue`,
 ): Promise<void> {
   const path = `data/${kind}.json`;
-  const current = await getFile(path);
-  await putFile({
-    path,
-    content: textToBase64(`${JSON.stringify(records, null, 2)}\n`),
-    message: `Add ${kind === "categories" ? "category" : kind === "teachers" ? "teacher" : "ingredient"} to cookbook catalogue`,
-    sha: current?.sha,
-  });
+  // GitHub's Contents API can briefly return the previous SHA while a commit
+  // is propagating. Retry with a fresh SHA so adding two catalogue entries in
+  // quick succession does not force the owner to reload the page.
+  let lastConflict: GitHubConflictError | null = null;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const current = await getFile(path);
+    try {
+      await putFile({
+        path,
+        content: textToBase64(`${JSON.stringify(records, null, 2)}\n`),
+        message: commitMessage,
+        sha: current?.sha,
+        conflictMessage: `GitHub is still updating ${kind}. Please try saving again in a moment.`,
+      });
+      return;
+    } catch (error) {
+      if (!(error instanceof GitHubConflictError)) throw error;
+      lastConflict = error;
+      await new Promise((resolve) => setTimeout(resolve, 350 * (attempt + 1)));
+    }
+  }
+  throw lastConflict ?? new GitHubConflictError(`Could not save ${kind}.`);
 }

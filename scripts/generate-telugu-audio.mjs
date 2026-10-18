@@ -1,8 +1,15 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getAudioBase64 } from "google-tts-api";
 
-const ingredients = JSON.parse(await readFile("data/ingredients.json", "utf8"));
+const ingredientFiles = (await readdir("data/ingredients")).filter((file) =>
+  file.endsWith(".json"),
+);
+const ingredients = await Promise.all(
+  ingredientFiles.map(async (file) =>
+    JSON.parse(await readFile(join("data/ingredients", file), "utf8")),
+  ),
+);
 const outputDirectory = "public/audio/ingredients";
 await mkdir(outputDirectory, { recursive: true });
 
