@@ -67,15 +67,18 @@
     },
     {
       "ingredientId": "ing-curry-leaves-fcb1daf6",
-      "quantity": "Any"
+      "quantity": "Any",
+      "note": "Optional"
     },
     {
       "ingredientId": "ing-chilli",
-      "quantity": "2 to 3"
+      "quantity": "2 to 3",
+      "note": "Optional"
     },
     {
       "ingredientId": "ing-coriander",
-      "quantity": "Enough"
+      "quantity": "Enough",
+      "note": "Optional"
     }
   ],
   "steps": [
@@ -93,7 +96,7 @@
     },
     {
       "id": "4e98e690-1938-41eb-8e30-16750d21e6ce",
-      "instruction": "On stove: oil, thalimpu seeds, onion, ginger garlic paste"
+      "instruction": "On stove: oil, thalimpu seeds, curry leaves, onions and chillies, ginger garlic paste"
     },
     {
       "id": "d97b3883-e068-413d-bd29-f09a32a8a80b",
@@ -118,9 +121,13 @@
     {
       "id": "259d93a9-a8b2-46ec-821f-1423c4755dad",
       "instruction": "After boiling, turn off stove."
+    },
+    {
+      "id": "f4793ab8-f5ca-4f71-b16a-7ad32e24d8c6",
+      "instruction": "Add corriender leaves."
     }
   ],
   "createdAt": "2026-10-18T16:23:12.186Z",
-  "updatedAt": "2026-10-18T18:44:49.092Z",
+  "updatedAt": "2026-10-18T18:47:50.117Z",
   "nickname": "My Favorite"
 }
