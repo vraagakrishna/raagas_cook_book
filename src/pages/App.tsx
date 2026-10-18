@@ -35,6 +35,7 @@ import { Brand } from "../components/Brand";
 import { OwnerAccess } from "../components/OwnerAccess";
 import { RecipeArtwork } from "../components/RecipeArtwork";
 import { homeUrl, parseRoute, recipeUrl, type Route } from "../routing/routes";
+import { publicAssetUrl } from "../routing/publicAssetUrl";
 
 const minutes = (value?: number) => {
   if (value == null) return "Not specified";
@@ -67,10 +68,8 @@ function App() {
       setRoute(parseRoute());
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
-    window.addEventListener("hashchange", onLocationChange);
     window.addEventListener("popstate", onLocationChange);
     return () => {
-      window.removeEventListener("hashchange", onLocationChange);
       window.removeEventListener("popstate", onLocationChange);
     };
   }, []);
@@ -719,7 +718,7 @@ function RecipeDetail({
       return;
     }
     const urls = audioPath
-      ? [audioPath]
+      ? [publicAssetUrl(audioPath)]
       : getAllAudioUrls(teluguText, {
           lang: "te",
           slow: false,
@@ -912,7 +911,7 @@ function RecipeDetail({
                     {ingredient?.image && (
                       <img
                         className="ingredient-image"
-                        src={ingredient.image}
+                        src={publicAssetUrl(ingredient.image)}
                         alt=""
                       />
                     )}
