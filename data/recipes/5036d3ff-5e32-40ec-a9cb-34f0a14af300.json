@@ -36,6 +36,11 @@
       "note": "Part of Thalimpu Seeds"
     },
     {
+      "ingredientId": "ing-jeera-4b363089",
+      "quantity": "Part of teaspoon",
+      "note": "Part of Thalimpu Seeds"
+    },
+    {
       "ingredientId": "ing-mustard-seeds-2f5623f3",
       "quantity": "Part of teaspoon",
       "note": "Part of Thalimpu Seeds"
@@ -59,6 +64,18 @@
     {
       "ingredientId": "ing-oil-b4b15509",
       "quantity": "Enough to boil all the things"
+    },
+    {
+      "ingredientId": "ing-curry-leaves-fcb1daf6",
+      "quantity": "Any"
+    },
+    {
+      "ingredientId": "ing-chilli",
+      "quantity": "2 to 3"
+    },
+    {
+      "ingredientId": "ing-coriander",
+      "quantity": "Enough"
     }
   ],
   "steps": [
@@ -68,7 +85,7 @@
     },
     {
       "id": "7fc64af9-7b19-4d82-b670-3a9be48718bc",
-      "instruction": "Boil Chinthapandu"
+      "instruction": "Soak Chinthapandu in water"
     },
     {
       "id": "09d746ff-4126-4005-9dd9-44a5c99a3802",
@@ -96,7 +113,7 @@
     },
     {
       "id": "a0d338c9-d66b-4095-a112-5770a16fa9fa",
-      "instruction": "Peel eggs and add eggs to bowl on stove."
+      "instruction": "Peel eggs and add eggs, with a slit, to bowl on stove."
     },
     {
       "id": "259d93a9-a8b2-46ec-821f-1423c4755dad",
@@ -104,6 +121,6 @@
     }
   ],
   "createdAt": "2026-10-18T16:23:12.186Z",
-  "updatedAt": "2026-10-18T17:12:51.733Z",
+  "updatedAt": "2026-10-18T18:44:49.092Z",
   "nickname": "My Favorite"
 }
