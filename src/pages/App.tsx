@@ -7,16 +7,20 @@ import {
   ChevronDown,
   ChefHat,
   Clock3,
+  Copy,
   Heart,
   Menu,
   Mic,
   MicOff,
   Minus,
+  Pencil,
+  Plus,
   Search,
   Share2,
   SlidersHorizontal,
   Sparkles,
   Square,
+  Trash2,
   Users,
   Volume2,
   X,
@@ -25,7 +29,7 @@ import {
   categories,
   categoryName,
   ingredientById,
-  recipes,
+  recipes as initialRecipes,
   teacherName,
   teachers,
 } from "../services/catalogue";
@@ -33,9 +37,23 @@ import { recipeSearchText } from "../search/recipeSearch";
 import type { Difficulty, Recipe } from "../types/models";
 import { Brand } from "../components/Brand";
 import { OwnerAccess } from "../components/OwnerAccess";
+import {
+  RecipeEditor,
+  type RecipeEditorMode,
+} from "../components/RecipeEditor";
 import { RecipeArtwork } from "../components/RecipeArtwork";
-import { homeUrl, parseRoute, recipeUrl, type Route } from "../routing/routes";
+import type { GitHubUser } from "../services/githubAuth";
+import {
+  homeUrl,
+  catalogueUrl,
+  newRecipeUrl,
+  parseRoute,
+  recipeUrl,
+  type Route,
+} from "../routing/routes";
 import { publicAssetUrl } from "../routing/publicAssetUrl";
+import { deleteRecipeFromGitHub } from "../services/githubRecipes";
+import { CataloguePage } from "../components/CataloguePage";
 
 const minutes = (value?: number) => {
   if (value == null) return "Not specified";
@@ -47,6 +65,12 @@ const minutes = (value?: number) => {
 
 function App() {
   const [route, setRoute] = useState<Route>(parseRoute);
+  const [recipeItems, setRecipeItems] = useState<Recipe[]>(initialRecipes);
+  const [owner, setOwner] = useState<GitHubUser | null>(null);
+  const [editor, setEditor] = useState<{
+    mode: RecipeEditorMode;
+    recipe?: Recipe;
+  } | null>(null);
   const [favourites, setFavourites] = useState<string[]>(() => {
     try {
       return JSON.parse(
@@ -62,7 +86,13 @@ function App() {
     window.history.replaceState(
       null,
       "",
-      initialRoute.page === "recipe" ? recipeUrl(initialRoute.id) : homeUrl(),
+      initialRoute.page === "recipe"
+        ? recipeUrl(initialRoute.id)
+        : initialRoute.page === "new-recipe"
+          ? newRecipeUrl()
+          : initialRoute.page === "catalogue"
+            ? catalogueUrl()
+            : homeUrl(),
     );
     const onLocationChange = () => {
       setRoute(parseRoute());
@@ -74,9 +104,30 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (route.page === "new-recipe" && owner && !editor) {
+      setEditor({ mode: "create" });
+    }
+  }, [route.page, owner, editor]);
+
   const navigateHome = () => {
     window.history.pushState(null, "", homeUrl());
     setRoute({ page: "home" });
+    setEditor(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const openNewRecipe = () => {
+    if (!owner) return;
+    window.history.pushState(null, "", newRecipeUrl());
+    setRoute({ page: "new-recipe" });
+    setEditor({ mode: "create" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const openCatalogue = () => {
+    if (!owner) return;
+    window.history.pushState(null, "", catalogueUrl());
+    setRoute({ page: "catalogue" });
+    setEditor(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const navigateRecipe = (id: string) => {
@@ -103,19 +154,71 @@ function App() {
 
   return (
     <div className="app-shell">
-      <Header onHome={navigateHome} onSection={navigateSection} />
-      {route.page === "home" ? (
+      <Header
+        onHome={navigateHome}
+        onSection={navigateSection}
+        currentPage={route.page}
+        canManage={Boolean(owner)}
+        onCreateRecipe={openNewRecipe}
+        onManageCatalogue={openCatalogue}
+        onOwnerChange={(nextOwner) => {
+          setOwner(nextOwner);
+          if (!nextOwner) {
+            setEditor(null);
+          }
+        }}
+      />
+      {route.page === "catalogue" && owner ? (
+        <CataloguePage onBack={navigateHome} />
+      ) : editor && owner ? (
+        <RecipeEditor
+          mode={editor.mode}
+          source={editor.recipe}
+          onCancel={navigateHome}
+          onSaved={(savedRecipe) => {
+            setRecipeItems((current) => {
+              const existing = current.some(
+                (item) => item.id === savedRecipe.id,
+              );
+              return existing
+                ? current.map((item) =>
+                    item.id === savedRecipe.id ? savedRecipe : item,
+                  )
+                : [...current, savedRecipe];
+            });
+            setEditor(null);
+            navigateRecipe(savedRecipe.id);
+          }}
+        />
+      ) : route.page === "home" ? (
         <Library
+          recipeItems={recipeItems}
           onOpenRecipe={navigateRecipe}
           favourites={favourites}
           onToggleFavourite={toggleFavourite}
+          canManage={Boolean(owner)}
+          onCreateRecipe={openNewRecipe}
         />
+      ) : route.page === "new-recipe" || route.page === "catalogue" ? (
+        <main className="not-found">
+          <h1>Owner access required</h1>
+          <p>Sign in as the cookbook owner to add a recipe.</p>
+        </main>
       ) : (
         <RecipeDetail
-          recipe={recipes.find((recipe) => recipe.id === route.id)}
+          recipe={recipeItems.find((recipe) => recipe.id === route.id)}
           onBack={navigateHome}
           isFavourite={favourites.includes(route.id)}
           onToggleFavourite={() => toggleFavourite(route.id)}
+          canManage={Boolean(owner)}
+          onEdit={(recipe) => setEditor({ mode: "edit", recipe })}
+          onDuplicate={(recipe) => setEditor({ mode: "duplicate", recipe })}
+          onDeleted={(id) => {
+            setRecipeItems((current) =>
+              current.filter((item) => item.id !== id),
+            );
+            navigateHome();
+          }}
         />
       )}
       <Footer onHome={navigateHome} />
@@ -126,9 +229,19 @@ function App() {
 function Header({
   onHome,
   onSection,
+  currentPage,
+  canManage,
+  onCreateRecipe,
+  onManageCatalogue,
+  onOwnerChange,
 }: {
   onHome: () => void;
   onSection: (id: string) => void;
+  currentPage: Route["page"];
+  canManage: boolean;
+  onCreateRecipe: () => void;
+  onManageCatalogue: () => void;
+  onOwnerChange: (user: GitHubUser | null) => void;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -163,9 +276,7 @@ function Header({
         </button>
         <button
           onClick={() => {
-            document
-              .getElementById("story")
-              ?.scrollIntoView({ behavior: "smooth" });
+            onSection("story");
             setOpen(false);
           }}
         >
@@ -173,7 +284,32 @@ function Header({
         </button>
       </nav>
       <div className="header-actions">
-        <OwnerAccess />
+        {canManage && (
+          <button
+            className={
+              currentPage === "new-recipe"
+                ? "header-add-recipe active"
+                : "header-add-recipe"
+            }
+            onClick={onCreateRecipe}
+            aria-label="Add a new recipe"
+          >
+            <Plus size={16} /> <span>Add recipe</span>
+          </button>
+        )}
+        {canManage && (
+          <button
+            className={
+              currentPage === "catalogue"
+                ? "header-catalogue-button active"
+                : "header-catalogue-button"
+            }
+            onClick={onManageCatalogue}
+          >
+            Catalogue
+          </button>
+        )}
+        <OwnerAccess onSessionChange={onOwnerChange} />
         <button
           className="menu-button"
           onClick={() => setOpen(!open)}
@@ -188,13 +324,19 @@ function Header({
 }
 
 function Library({
+  recipeItems,
   onOpenRecipe,
   favourites,
   onToggleFavourite,
+  canManage,
+  onCreateRecipe,
 }: {
+  recipeItems: Recipe[];
   onOpenRecipe: (id: string) => void;
   favourites: string[];
   onToggleFavourite: (id: string) => void;
+  canManage: boolean;
+  onCreateRecipe: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
@@ -209,7 +351,7 @@ function Library({
 
   const filtered = useMemo(() => {
     const normalizedQuery = query.normalize("NFC").trim().toLocaleLowerCase();
-    return recipes
+    return recipeItems
       .filter((recipe) => {
         const durationMatch =
           duration === "all" ||
@@ -255,6 +397,7 @@ function Library({
     sort,
     collection,
     favourites,
+    recipeItems,
   ]);
 
   const activeFilterCount = [category, teacher, difficulty, duration].filter(
@@ -442,6 +585,11 @@ function Library({
             </p>
           </div>
           <div className="toolbar">
+            {canManage && (
+              <button className="owner-create-button" onClick={onCreateRecipe}>
+                <Plus size={17} /> Add recipe
+              </button>
+            )}
             <button
               className={
                 filtersOpen || activeFilterCount
@@ -677,11 +825,19 @@ function RecipeDetail({
   onBack,
   isFavourite,
   onToggleFavourite,
+  canManage,
+  onEdit,
+  onDuplicate,
+  onDeleted,
 }: {
   recipe?: Recipe;
   onBack: () => void;
   isFavourite: boolean;
   onToggleFavourite: () => void;
+  canManage: boolean;
+  onEdit: (recipe: Recipe) => void;
+  onDuplicate: (recipe: Recipe) => void;
+  onDeleted: (id: string) => void;
 }) {
   const [servings, setServings] = useState(recipe?.servings ?? 1);
   const [checkedIngredients, setCheckedIngredients] = useState<string[]>([]);
@@ -689,6 +845,10 @@ function RecipeDetail({
   const playbackIdRef = useRef(0);
   const [speakingText, setSpeakingText] = useState<string | null>(null);
   const [audioError, setAudioError] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteName, setDeleteName] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -757,7 +917,7 @@ function RecipeDetail({
   const share = async () => {
     const payload = {
       title: recipe.name,
-      text: recipe.description,
+      text: recipe.note ?? recipe.name,
       url: window.location.href,
     };
     if (navigator.share) await navigator.share(payload).catch(() => undefined);
@@ -774,6 +934,28 @@ function RecipeDetail({
           <ArrowLeft size={17} /> Back to recipes
         </button>
         <div>
+          {canManage && (
+            <>
+              <button
+                className="owner-detail-action"
+                onClick={() => onEdit(recipe)}
+              >
+                <Pencil size={16} /> Edit
+              </button>
+              <button
+                className="owner-detail-action"
+                onClick={() => onDuplicate(recipe)}
+              >
+                <Copy size={16} /> Duplicate
+              </button>
+              <button
+                className="owner-detail-action danger"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <Trash2 size={16} /> Delete
+              </button>
+            </>
+          )}
           <button
             className={
               isFavourite ? "detail-favourite saved" : "detail-favourite"
@@ -788,6 +970,63 @@ function RecipeDetail({
           </button>
         </div>
       </div>
+      {deleteOpen && (
+        <div className="dialog-backdrop" role="presentation">
+          <div
+            className="confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-title"
+          >
+            <h2 id="delete-title">Delete {recipe.name}?</h2>
+            <p>
+              This removes the recipe JSON and any images for it from GitHub.
+            </p>
+            <label>
+              <span>Type the recipe name to confirm</span>
+              <input
+                autoFocus
+                value={deleteName}
+                onChange={(event) => setDeleteName(event.target.value)}
+              />
+            </label>
+            {deleteError && <p className="editor-error">{deleteError}</p>}
+            <div className="catalogue-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteOpen(false);
+                  setDeleteName("");
+                  setDeleteError("");
+                }}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="danger-button"
+                disabled={deleting || deleteName !== recipe.name}
+                onClick={() => {
+                  setDeleting(true);
+                  void deleteRecipeFromGitHub(recipe)
+                    .then(() => onDeleted(recipe.id))
+                    .catch((error) => {
+                      setDeleteError(
+                        error instanceof Error
+                          ? error.message
+                          : "Could not delete this recipe.",
+                      );
+                      setDeleting(false);
+                    });
+                }}
+              >
+                {deleting ? "Deleting…" : "Delete recipe"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <section className="detail-hero">
         <div
           className={
@@ -808,7 +1047,6 @@ function RecipeDetail({
           {recipe.nickname && (
             <p className="detail-nickname">“{recipe.nickname}”</p>
           )}
-          <p className="detail-description">{recipe.description}</p>
           <div className="detail-meta">
             <span>
               <Clock3 /> <small>Total time</small>
@@ -970,6 +1208,13 @@ function RecipeDetail({
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <div>
                   <p>{step.instruction}</p>
+                  {step.image && (
+                    <img
+                      className="step-image"
+                      src={publicAssetUrl(step.image)}
+                      alt={`Step ${index + 1}`}
+                    />
+                  )}
                   {index === 0 && recipe.prepDurationMinutes && (
                     <small>
                       <Clock3 size={13} /> About{" "}
@@ -985,8 +1230,7 @@ function RecipeDetail({
             <div>
               <strong>Raaga’s note</strong>
               <p>
-                Taste as you go. The measurements guide you, but your senses
-                finish the dish.
+                {recipe.note ?? "Taste as you go. Your senses finish the dish."}
               </p>
             </div>
           </div>

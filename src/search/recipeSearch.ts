@@ -13,7 +13,7 @@ export function recipeSearchText(recipe: Recipe) {
     })
     .join(" ");
 
-  return `${recipe.name} ${recipe.nickname ?? ""} ${recipe.description} ${categoryName(recipe.categoryId)} ${teacherName(recipe.teacherId)} ${ingredientText} ${recipe.steps.map((step) => step.instruction).join(" ")}`
+  return `${recipe.name} ${recipe.nickname ?? ""} ${recipe.note ?? ""} ${categoryName(recipe.categoryId)} ${teacherName(recipe.teacherId)} ${ingredientText} ${recipe.steps.map((step) => step.instruction).join(" ")}`
     .normalize("NFC")
     .toLocaleLowerCase();
 }

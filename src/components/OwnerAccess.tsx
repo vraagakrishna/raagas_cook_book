@@ -10,10 +10,15 @@ import {
 import {
   type GitHubUser,
   signInOwner,
+  savedOwnerToken,
   signOutOwner,
 } from "../services/githubAuth";
 
-export function OwnerAccess() {
+export function OwnerAccess({
+  onSessionChange,
+}: {
+  onSessionChange: (user: GitHubUser | null) => void;
+}) {
   const [user, setUser] = useState<GitHubUser | null>(null);
   const [open, setOpen] = useState(false);
   const [working, setWorking] = useState(false);
@@ -22,6 +27,15 @@ export function OwnerAccess() {
   const tokenInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
+    const token = savedOwnerToken();
+    if (token) {
+      void signInOwner(token)
+        .then((owner) => {
+          setUser(owner);
+          onSessionChange(owner);
+        })
+        .catch(() => signOutOwner());
+    }
     return () => abortRef.current?.abort();
   }, []);
 
@@ -47,6 +61,7 @@ export function OwnerAccess() {
       );
       if (tokenInputRef.current) tokenInputRef.current.value = "";
       setUser(owner);
+      onSessionChange(owner);
       close();
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === "AbortError")
@@ -61,6 +76,7 @@ export function OwnerAccess() {
   const signOut = () => {
     signOutOwner();
     setUser(null);
+    onSessionChange(null);
   };
 
   if (user) {
@@ -103,9 +119,9 @@ export function OwnerAccess() {
             <p className="kicker">OWNER ACCESS</p>
             <h2 id="github-sign-in-title">Owner sign in</h2>
             <p>
-              Enter a fine-grained GitHub token for this repository. It stays
-              only in this tab's memory and is erased when you sign out or
-              refresh.
+              Enter a fine-grained GitHub token for this repository. It stays in
+              this tab's session and is erased when you sign out or close the
+              tab.
             </p>
             <form
               className="owner-token-form"

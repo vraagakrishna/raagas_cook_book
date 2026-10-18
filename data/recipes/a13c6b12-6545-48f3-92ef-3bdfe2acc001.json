@@ -3,7 +3,6 @@
   "name": "Amma's Chicken Curry",
   "nickname": "Sunday comfort in a bowl",
   "coverImage": "./images/recipes/chicken-curry.svg",
-  "description": "A deeply spiced, home-style Andhra curry with tender chicken and a glossy onion-tomato gravy.",
   "categoryId": "cat-curry",
   "teacherId": "teacher-amma",
   "servings": 4,

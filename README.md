@@ -123,7 +123,7 @@ A login screen that merely hides edit buttons is not security. Any authorization
 The application is frontend-only and uses no service other than GitHub. The
 owner manually enters a fine-grained personal access token for an editing
 session. GitHub validates the token, owner identity, repository access, and each
-write request. Future create/edit operations will use GitHub's repository
+write request. Create/edit/delete operations use GitHub's repository
 contents API and the current file SHA so concurrent changes fail instead of
 silently overwriting newer content.
 
@@ -141,11 +141,13 @@ expiration and the minimum repository permissions documented below.
 
 - Hide or disable owner controls for signed-out visitors, but enforce authorization at the write boundary as well.
 
-- Owner access lasts only for the current loaded tab. Refreshing requires the
-  token to be entered again.
+- Owner access lasts for the current browser session. The validated token is
+  kept in `sessionStorage` so a refresh in the same tab does not sign the owner
+  out; signing out or closing the tab clears it.
 
-- Storing a password or repository token in `localStorage`, `sessionStorage`,
-  IndexedDB, cookies, or another persistent browser store is prohibited.
+- Never store a repository token in `localStorage`, IndexedDB, cookies, or the
+  repository. `sessionStorage` is used only for the current-tab session and is
+  cleared on sign-out.
 
 - Browser storage may hold a non-sensitive preference or an appropriately designed session reference only when the authentication implementation supports it safely.
 
@@ -156,7 +158,7 @@ expiration and the minimum repository permissions documented below.
 - Owner identity uses a fine-grained GitHub personal access token entered at
   runtime. The app accepts access only when GitHub returns both the configured
   immutable numeric user ID and username and confirms push access to the
-  configured repository. The token stays only in memory.
+  configured repository. The token stays in the current tab session.
 
 ## 6. Recipe data model
 
@@ -313,7 +315,8 @@ Rules:
 
 - Categories are shown from a pre-defined list.
 
-- Categories are managed on a settings page before implementation.
+- Categories can be added by the owner from the recipe editor; the new record is
+  committed to `data/categories.json` before it is selected in the recipe.
 
 - Renaming a category must not break references.
 
@@ -451,13 +454,17 @@ The form must support:
 
 - Cover image upload or take photo.
 
-- Category selection (dropdown).
+- Every image control provides separate **Browse device** and **Take photo**
+  actions, validates the selected file, previews it, and stores the final image
+  in the repository.
 
-- Teacher selection (dropdown).
+- Category selection (searchable dropdown; no value is preselected).
+
+- Teacher selection (searchable dropdown; no value is preselected).
 
 - Servings.
 
-- Difficulty (dropdown).
+- Difficulty (searchable dropdown; no value is preselected).
 
 - Preparation, waiting, and cooking durations (Optional).
 
@@ -478,6 +485,11 @@ The form must support:
 - Clear saving, success, and error states.
 
 Do not lose entered data on a validation error or recoverable network/write failure. Temporary form drafts may be kept in memory or non-canonical browser storage, but a successful save must commit the canonical data to the repository.
+
+The current editor stores incomplete form fields in `localStorage` under a
+draft-only key and restores them when the owner returns. **Clear form** removes
+that draft after confirmation. Draft storage is never the canonical recipe
+store; a completed recipe is saved to GitHub.
 
 ### 9.4 Edit recipe
 
@@ -511,9 +523,15 @@ Do not lose entered data on a validation error or recoverable network/write fail
 
 - Require a valid unique ID and confirm that the new record does not already exist.
 
-### 9.6 Delete recipe (decision required)
+### 9.6 Delete recipe
 
-Deletion was not explicitly specified as a core requirement. Do not implement destructive deletion until the owner confirms the desired behavior. If added, require confirmation, protect against unauthorized access, and avoid deleting shared ingredient images still in use.
+- The owner can delete a recipe from its detail page.
+
+- The confirmation dialog requires typing the exact recipe name.
+
+- Deletion removes the recipe JSON and images referenced by that recipe.
+
+- Public visitors never see this control.
 
 ## 10. Search
 
@@ -678,7 +696,7 @@ If not implemented, display original servings and quantities only.
 
 - Provide useful validation messages near the relevant fields.
 
-- Provide confirmation for destructive actions if deletion is later approved.
+- Require exact-name confirmation for destructive recipe deletion.
 
 - Keep text readable, including Telugu script.
 
@@ -851,27 +869,27 @@ Automated tests should cover at least:
 
 The application is not ready for release until all of the following are true:
 
-- [ ] Public visitors can browse recipes without signing in.
+- [x] Public visitors can browse recipes without signing in.
 
-- [ ] Each recipe has a stable, shareable URL.
+- [x] Each recipe has a stable, shareable URL.
 
-- [ ] Recipe cards show the agreed metadata.
+- [x] Recipe cards show the agreed metadata.
 
 - [ ] Pagination works and responds correctly to filters/search.
 
-- [ ] Search covers names, nicknames, ingredients, steps, teachers, and categories.
+- [x] Search covers names, nicknames, ingredients, steps, teachers, and categories.
 
-- [ ] Filters include teacher, category, difficulty, and duration.
+- [x] Filters include teacher, category, difficulty, and duration.
 
-- [ ] Authorized owner can add and edit recipes through forms.
+- [x] Authorized owner can add and edit recipes through forms.
 
-- [ ] Authorized owner can duplicate an entire recipe without modifying the original.
+- [x] Authorized owner can duplicate an entire recipe without modifying the original.
 
-- [ ] Recipe identity and filenames do not depend on recipe names.
+- [x] Recipe identity and filenames do not depend on recipe names.
 
 - [ ] Ingredients use a master catalogue with autocomplete and reusable photos.
 
-- [ ] Teacher and category data are structured and referenced by stable IDs.
+- [x] Teacher and category data are structured and referenced by stable IDs.
 
 - [ ] Recipe, ingredient, and step images are stored in the repository.
 
@@ -881,12 +899,12 @@ The application is not ready for release until all of the following are true:
 
 - [ ] Voice search is available where supported, with ordinary text search as a fallback.
 
-- [ ] Successful edits are committed to GitHub and survive a browser/device change.
+- [x] Successful edits are committed to GitHub and survive a browser/device change.
 
-- [ ] No write credential is embedded in the public frontend or persisted in
+- [x] No write credential is embedded in the public frontend or persisted in
       browser storage.
 
-- [ ] GitHub Actions validates, builds, and deploys the site.
+- [x] GitHub Actions validates, builds, and deploys the site.
 
 - [ ] The project can be deployed without a paid service under the selected usage and plan limits.
 
@@ -899,13 +917,15 @@ The application is not ready for release until all of the following are true:
 Do not silently assume answers to these questions:
 
 1. **Write mechanism:** _Settled: a repository-limited fine-grained GitHub token
-   entered by the owner for the current in-memory editing session._
+   entered by the owner for the current browser-tab session._
 
 2. **Authentication:** _Settled: GitHub validates the fine-grained token and the
    configured username, numeric user ID, and repository. The session is
-   intentionally not persistent._
+   survives refresh in the current tab via `sessionStorage`._
 
-3. **Saving experience:** Should Save commit directly, or create a proposed change/pull request that the owner approves?
+3. **Saving experience:** _Settled: Save commits directly to the configured
+   branch. Existing recipes use their previously loaded GitHub file SHA to
+   prevent silent overwrites._
 
 4. **Teacher/category management:** Separate settings page or add new values inline in recipe forms? _Specified above_
 
@@ -913,7 +933,7 @@ Do not silently assume answers to these questions:
 
 6. **Serving adjustment:** Required for v1 or deferred? _Every value can be edited_
 
-7. **Deletion:** Is recipe deletion required? If yes, should it be soft-delete/archive or permanent delete? _Defer deletion for version 1_
+7. **Deletion:** _Settled: permanent owner-only delete with exact recipe-name confirmation; delete the recipe JSON and its recipe-specific images._
 
 8. **Pagination size:** Default recipes per page and whether the user can change it. _20 items per page, as specified above_
 
@@ -943,7 +963,7 @@ Do not add these by default:
 
 - Nutritional or medical claims.
 
-- Recipe deletion without an agreed safety policy.
+- Unconfirmed or unauthorised destructive deletion.
 
 - Social features, ratings, comments, or user profiles.
 
@@ -1042,6 +1062,7 @@ export const appConfig = {
     ownerUserId: "1",
     repositoryOwner: "octocat",
     repositoryName: "raagas_cook_book",
+    repositoryBranch: "main",
   },
 } as const;
 ```
@@ -1058,12 +1079,43 @@ and is entered at runtime.
    configured owner identity, and repository write access.
 4. Use the sign-out button when finished.
 
-The token is held only in the current page's memory. It is not written to
-`localStorage`, `sessionStorage`, IndexedDB, a cookie, or the repository. A page
-refresh or closed tab signs the owner out. This inconvenience is intentional:
-without a backend, persisting a repository write credential would increase the
-damage possible from browser extensions, injected scripts, or someone using the
-same device.
+After signing in:
+
+- Open the recipe library and select **Add recipe** to create a recipe.
+
+- The editor uses the shareable `/recipe/new` route, so the browser URL changes
+  while a new recipe is being created. The recipe UUID is generated only when
+  Save is pressed; the app checks GitHub for a collision before committing it.
+
+- Open an existing recipe and select **Edit** to change it.
+
+- Open an existing recipe and select **Duplicate** to make an independent copy
+  with a new UUID. The copy opens in the editor before anything is saved.
+
+- The owner **Catalogue** button opens the clean `/catalogue` route, where all
+  ingredients, teachers, and categories can be searched and managed.
+
+- Ingredient rows and method steps can be added, removed, and reordered.
+
+- Use **Create a new ingredient**, **Add teacher**, or **Add category** beside
+  the relevant recipe field. New master records are committed to their
+  catalogue JSON first, then become selectable in the current form. Ingredients
+  may include Telugu script, Telugu-in-English pronunciation, and an optional
+  ingredient image.
+
+- Use the owner **Catalogue** screen to view, add, edit, and delete ingredients,
+  teachers, and categories. Entries still referenced by a recipe cannot be
+  deleted until those recipes are updated.
+
+- A recipe cover is optional. JPEG, PNG, and WebP uploads are validated for
+  declared type, file signature, decoding, file size, dimensions, and pixels.
+
+- Save commits the recipe JSON to `data/recipes/<recipe-id>.json`. A new cover
+  image is committed to `public/images/recipes/`.
+
+The token is held in the current tab's `sessionStorage` so refreshes preserve
+access. It is not written to `localStorage`, IndexedDB, a cookie, or the
+repository. Sign out or close the tab to clear it.
 
 If login fails, confirm that the token has not expired, belongs to the configured
 owner, selects the configured repository, and grants `Contents: Read and write`.
@@ -1083,11 +1135,16 @@ GitHub Pages must be enabled in the repository before the deployment workflow
 can query or deploy the site. A repository administrator or maintainer should:
 
 1. Open the repository on GitHub.
+
 2. Select **Settings**. If the tab is hidden, open the repository navigation
    dropdown and select **Settings**.
+
 3. In the left sidebar, under **Code and automation**, select **Pages**.
+
 4. Find **Build and deployment**.
+
 5. Set **Source** to **GitHub Actions**.
+
 6. Leave the other Pages settings at their defaults unless a custom domain is
    intentionally being configured.
 
@@ -1105,10 +1162,14 @@ has repository administration or maintenance access.
 After choosing **GitHub Actions** as the Pages source:
 
 1. Open the repository's **Actions** tab.
+
 2. Select **Validate and deploy to GitHub Pages**.
+
 3. Either open the failed run and select **Re-run all jobs**, or select **Run
    workflow**, choose the `main` branch, and confirm **Run workflow**.
+
 4. Wait for both the `build` and `deploy` jobs to complete.
+
 5. Open **Settings → Pages** to find the published URL. GitHub also displays the
    URL in the completed deployment job.
 
@@ -1147,18 +1208,23 @@ If the error remains after enabling Pages:
 
 1. Reopen **Settings → Pages** and confirm **Source: GitHub Actions** is still
    selected.
+
 2. Confirm the workflow file exists on `main` at
    `.github/workflows/deploy.yml`.
+
 3. Confirm GitHub Actions is enabled under **Settings → Actions → General**.
+
 4. Check whether an organization policy prevents Pages, GitHub Actions, or
    deployment to the `github-pages` environment.
+
 5. Open the failed workflow and verify whether the failing step is **Configure
    Pages**, **Upload artifact**, or **Deploy to GitHub Pages**; each indicates a
    different stage of the deployment.
 
 The current release implements public browsing, device-local favourites, Google
-Telugu pronunciation, and in-memory owner authentication using a repository-
-limited fine-grained GitHub token. It is built and deployed only through GitHub
-Pages and GitHub Actions. Recipe editing forms and GitHub save operations remain
-to be implemented; the authenticated token is never persisted between page
-loads.
+Telugu pronunciation, current-tab owner authentication, owner-only
+create/edit/duplicate/delete recipe forms, and catalogue management that commit
+through GitHub's repository API.
+It is built and deployed only through GitHub Pages and GitHub Actions. The
+authenticated token is kept only in the current tab's `sessionStorage` and is
+cleared when that tab is closed or the owner signs out.

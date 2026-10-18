@@ -15,6 +15,7 @@ interface GitHubRepository {
 }
 
 let activeOwnerToken: string | null = null;
+const ownerTokenStorageKey = "raagas-github-owner-token";
 
 const githubHeaders = (token: string) => ({
   Accept: "application/vnd.github+json",
@@ -137,11 +138,20 @@ export async function signInOwner(
   }
 
   activeOwnerToken = token;
+  if (typeof sessionStorage !== "undefined")
+    sessionStorage.setItem(ownerTokenStorageKey, token);
   return user;
 }
+
+export const savedOwnerToken = () =>
+  typeof sessionStorage === "undefined"
+    ? null
+    : sessionStorage.getItem(ownerTokenStorageKey);
 
 export const getActiveOwnerToken = () => activeOwnerToken;
 
 export const signOutOwner = () => {
   activeOwnerToken = null;
+  if (typeof sessionStorage !== "undefined")
+    sessionStorage.removeItem(ownerTokenStorageKey);
 };

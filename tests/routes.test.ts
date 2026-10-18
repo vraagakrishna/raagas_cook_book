@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { homeUrl, parseRoute, recipeUrl } from "../src/routing/routes";
+import {
+  homeUrl,
+  catalogueUrl,
+  newRecipeUrl,
+  parseRoute,
+  recipeUrl,
+} from "../src/routing/routes";
 import { publicAssetUrl } from "../src/routing/publicAssetUrl";
 
 describe("clean application routes", () => {
@@ -13,6 +19,18 @@ describe("clean application routes", () => {
     expect(recipeUrl("recipe-id", "/raagas_cook_book/")).toBe(
       "/raagas_cook_book/recipe/recipe-id",
     );
+  });
+
+  it("builds and parses the new-recipe route", () => {
+    expect(newRecipeUrl("/")).toBe("/recipe/new");
+    expect(parseRoute("/recipe/new", "", "/")).toEqual({
+      page: "new-recipe",
+    });
+  });
+
+  it("builds and parses the catalogue route", () => {
+    expect(catalogueUrl("/")).toBe("/catalogue");
+    expect(parseRoute("/catalogue", "", "/")).toEqual({ page: "catalogue" });
   });
 
   it("parses clean local and GitHub Pages recipe paths", () => {

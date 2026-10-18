@@ -1,4 +1,4 @@
-export type Difficulty = "easy" | "medium" | "hard";
+export type Difficulty = "" | "easy" | "medium" | "hard";
 
 export interface Ingredient {
   id: string;
@@ -18,6 +18,7 @@ export interface RecipeIngredient {
 export interface RecipeStep {
   id: string;
   instruction: string;
+  image?: string;
 }
 
 export interface Recipe {
@@ -25,7 +26,6 @@ export interface Recipe {
   name: string;
   nickname?: string;
   coverImage?: string;
-  description: string;
   categoryId: string;
   teacherId: string;
   servings: number;
@@ -36,6 +36,7 @@ export interface Recipe {
   totalDurationMinutes?: number;
   ingredients: RecipeIngredient[];
   steps: RecipeStep[];
+  note?: string;
   createdAt: string;
   updatedAt: string;
   featured?: boolean;
