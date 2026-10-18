@@ -93,6 +93,11 @@ textarea:focus-visible {
   color: #f8f1e5;
   background: var(--sage-dark);
 }
+.brand-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 .brand strong,
 .brand em {
   display: block;
@@ -1004,6 +1009,12 @@ textarea:focus-visible {
   color: #666b66;
   background: #ecece9;
   border: 1px solid #c3c6c1;
+}
+.recipe-placeholder-logo {
+  width: 58px;
+  height: 58px;
+  filter: grayscale(1);
+  opacity: 0.58;
 }
 .plate-ring {
   width: 177px;

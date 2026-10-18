@@ -1,4 +1,3 @@
-import { CookingPot } from "lucide-react";
 import type { Recipe } from "../types/models";
 import { publicAssetUrl } from "../routing/publicAssetUrl";
 
@@ -11,7 +10,11 @@ export function RecipeArtwork({ recipe }: { recipe: Recipe }) {
     />
   ) : (
     <span className="recipe-placeholder" aria-hidden="true">
-      <CookingPot size={58} strokeWidth={1.2} />
+      <img
+        className="recipe-placeholder-logo"
+        src={publicAssetUrl("favicon.svg")}
+        alt=""
+      />
     </span>
   );
 }

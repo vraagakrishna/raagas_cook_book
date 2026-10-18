@@ -1,10 +1,15 @@
-import { CookingPot } from "lucide-react";
+import { publicAssetUrl } from "../routing/publicAssetUrl";
 
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <>
       <span className="brand-mark">
-        <CookingPot size={22} strokeWidth={1.8} />
+        <img
+          className="brand-logo"
+          src={publicAssetUrl("favicon.svg")}
+          alt=""
+          aria-hidden="true"
+        />
       </span>
       <span>
         <strong>Raaga’s</strong>
