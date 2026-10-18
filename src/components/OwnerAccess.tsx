@@ -13,6 +13,7 @@ import {
   savedOwnerToken,
   signOutOwner,
 } from "../services/githubAuth";
+import { closeOnBackdrop, useDialogDismiss } from "../hooks/useDialogDismiss";
 
 export function OwnerAccess({
   onSessionChange,
@@ -46,6 +47,8 @@ export function OwnerAccess({
     setWorking(false);
     setError("");
   };
+
+  useDialogDismiss(open, close);
 
   const signIn = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -102,9 +105,7 @@ export function OwnerAccess({
         <div
           className="modal-backdrop"
           role="presentation"
-          onMouseDown={(event) =>
-            event.target === event.currentTarget && close()
-          }
+          onMouseDown={(event) => closeOnBackdrop(event, close)}
         >
           <section
             className="github-sign-in"

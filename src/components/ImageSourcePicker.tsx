@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, ImagePlus, X } from "lucide-react";
+import { closeOnBackdrop, useDialogDismiss } from "../hooks/useDialogDismiss";
 
 export function ImageSourcePicker({
   onFile,
@@ -29,6 +30,8 @@ export function ImageSourcePicker({
     setCameraError("");
     setZoom(1);
   };
+
+  useDialogDismiss(cameraOpen, closeCamera);
 
   useEffect(() => {
     if (!cameraOpen || photo) return;
@@ -167,7 +170,11 @@ export function ImageSourcePicker({
         </button>
       </div>
       {cameraOpen && (
-        <div className="camera-backdrop" role="presentation">
+        <div
+          className="camera-backdrop"
+          role="presentation"
+          onMouseDown={(event) => closeOnBackdrop(event, closeCamera)}
+        >
           <section
             className="camera-dialog"
             role="dialog"

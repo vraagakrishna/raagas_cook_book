@@ -58,6 +58,7 @@ import { deleteRecipeFromGitHub } from "../services/githubRecipes";
 import { CataloguePage } from "../components/CataloguePage";
 import { ingredientPronunciationPath } from "../services/pronunciation";
 import { Seo } from "../components/Seo";
+import { closeOnBackdrop, useDialogDismiss } from "../hooks/useDialogDismiss";
 
 const minutes = (value?: number) => {
   if (value == null) return "Not specified";
@@ -987,6 +988,13 @@ function RecipeDetail({
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
 
+  const closeDelete = () => {
+    setDeleteOpen(false);
+    setDeleteName("");
+    setDeleteError("");
+  };
+  useDialogDismiss(deleteOpen, closeDelete);
+
   useEffect(() => {
     return () => {
       playbackIdRef.current += 1;
@@ -1112,7 +1120,11 @@ function RecipeDetail({
         </div>
       </div>
       {deleteOpen && (
-        <div className="dialog-backdrop" role="presentation">
+        <div
+          className="dialog-backdrop"
+          role="presentation"
+          onMouseDown={(event) => closeOnBackdrop(event, closeDelete)}
+        >
           <div
             className="confirm-dialog"
             role="dialog"
@@ -1133,15 +1145,7 @@ function RecipeDetail({
             </label>
             {deleteError && <p className="editor-error">{deleteError}</p>}
             <div className="catalogue-actions">
-              <button
-                type="button"
-                onClick={() => {
-                  setDeleteOpen(false);
-                  setDeleteName("");
-                  setDeleteError("");
-                }}
-                disabled={deleting}
-              >
+              <button type="button" onClick={closeDelete} disabled={deleting}>
                 Cancel
               </button>
               <button

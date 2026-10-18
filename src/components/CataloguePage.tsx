@@ -15,6 +15,7 @@ import {
 import type { Ingredient, MasterRecord } from "../types/models";
 import { publicAssetUrl } from "../routing/publicAssetUrl";
 import { ImageSourcePicker } from "./ImageSourcePicker";
+import { closeOnBackdrop, useDialogDismiss } from "../hooks/useDialogDismiss";
 
 type Kind = CatalogueFile;
 const lists = { ingredients, teachers, categories };
@@ -39,6 +40,7 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
+  useDialogDismiss(dialogOpen, () => setDialogOpen(false));
   const records = lists[kind] as (Ingredient | MasterRecord)[];
   const visible = records.filter((record) =>
     ("english" in record ? record.english : record.name)
@@ -286,7 +288,13 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
         ))}
       </div>
       {dialogOpen && (
-        <div className="catalogue-dialog-backdrop" role="presentation">
+        <div
+          className="catalogue-dialog-backdrop"
+          role="presentation"
+          onMouseDown={(event) =>
+            closeOnBackdrop(event, () => setDialogOpen(false))
+          }
+        >
           <section className="catalogue-dialog" role="dialog" aria-modal="true">
             <h2>
               {editingRecord ? "Edit" : "Add"} {kind.slice(0, -1)}

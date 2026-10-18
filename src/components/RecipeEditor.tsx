@@ -29,6 +29,7 @@ import type {
 import { publicAssetUrl } from "../routing/publicAssetUrl";
 import { appConfig } from "../config/appConfig";
 import { ImageSourcePicker } from "./ImageSourcePicker";
+import { closeOnBackdrop, useDialogDismiss } from "../hooks/useDialogDismiss";
 
 export type RecipeEditorMode = "create" | "edit" | "duplicate";
 
@@ -192,6 +193,8 @@ export function RecipeEditor({
   >(null);
   const [, refreshCatalogue] = useState(0);
   const fieldRefs = useRef<Record<string, HTMLElement | null>>({});
+
+  useDialogDismiss(Boolean(catalogueMode), () => setCatalogueMode(null));
 
   useEffect(() => {
     try {
@@ -483,7 +486,13 @@ export function RecipeEditor({
 
       <form className="recipe-editor" onSubmit={submit}>
         {catalogueMode && (
-          <div className="catalogue-dialog-backdrop" role="presentation">
+          <div
+            className="catalogue-dialog-backdrop"
+            role="presentation"
+            onMouseDown={(event) =>
+              closeOnBackdrop(event, () => setCatalogueMode(null))
+            }
+          >
             <CatalogueManager
               mode={catalogueMode}
               onClose={() => setCatalogueMode(null)}
@@ -684,7 +693,10 @@ export function RecipeEditor({
               />
             )}
             <div>
-              <ImageSourcePicker onFile={(file) => void chooseImage(file)} disabled={saving} />
+              <ImageSourcePicker
+                onFile={(file) => void chooseImage(file)}
+                disabled={saving}
+              />
               <small>JPEG, PNG or WebP · maximum 3 MB</small>
               {(imagePreview || draft.coverImage) && (
                 <button
@@ -926,7 +938,11 @@ export function RecipeEditor({
                       alt={`Step ${index + 1} preview`}
                     />
                   )}
-                  <ImageSourcePicker compact onFile={(file) => void chooseStepImage(step.id, file)} disabled={saving} />
+                  <ImageSourcePicker
+                    compact
+                    onFile={(file) => void chooseStepImage(step.id, file)}
+                    disabled={saving}
+                  />
                 </div>
                 <RowActions
                   index={index}
@@ -1188,8 +1204,17 @@ function CatalogueManager({
             </label>
             <div className="catalogue-image-field">
               <span>Ingredient image</span>
-              <div ref={(element) => { imageInputRef.current = element?.querySelector("input[type=file]") ?? null; }}>
-                <ImageSourcePicker compact onFile={readImage} disabled={saving} />
+              <div
+                ref={(element) => {
+                  imageInputRef.current =
+                    element?.querySelector("input[type=file]") ?? null;
+                }}
+              >
+                <ImageSourcePicker
+                  compact
+                  onFile={readImage}
+                  disabled={saving}
+                />
               </div>
               {error && errorField === "image" && (
                 <small className="field-error">{error}</small>
@@ -1201,7 +1226,11 @@ function CatalogueManager({
           <button type="button" onClick={onClose} disabled={saving}>
             <X size={15} /> Cancel
           </button>
-          <button type="button" onClick={() => void submitCatalogue()} disabled={saving}>
+          <button
+            type="button"
+            onClick={() => void submitCatalogue()}
+            disabled={saving}
+          >
             {saving ? (
               <LoaderCircle className="spin" size={15} />
             ) : (
@@ -1245,7 +1274,10 @@ function SearchableSelect({
   );
   useEffect(() => setActiveIndex(0), [query, open]);
   useEffect(() => {
-    if (open) document.getElementById(`${listId}-${activeIndex}`)?.scrollIntoView({ block: "nearest" });
+    if (open)
+      document
+        .getElementById(`${listId}-${activeIndex}`)
+        ?.scrollIntoView({ block: "nearest" });
   }, [activeIndex, listId, open]);
   return (
     <div className={open ? "searchable-select open" : "searchable-select"}>
@@ -1269,7 +1301,9 @@ function SearchableSelect({
           if (event.key === "Escape") setOpen(false);
           if (event.key === "ArrowDown" && open) {
             event.preventDefault();
-            setActiveIndex((current) => Math.min(current + 1, Math.max(matches.length - 1, 0)));
+            setActiveIndex((current) =>
+              Math.min(current + 1, Math.max(matches.length - 1, 0)),
+            );
           }
           if (event.key === "ArrowUp" && open) {
             event.preventDefault();
@@ -1286,7 +1320,9 @@ function SearchableSelect({
         aria-expanded={open}
         aria-autocomplete="list"
         aria-controls={listId}
-        aria-activedescendant={open && matches[activeIndex] ? `${listId}-${activeIndex}` : undefined}
+        aria-activedescendant={
+          open && matches[activeIndex] ? `${listId}-${activeIndex}` : undefined
+        }
       />
       <span className="searchable-select-arrow" aria-hidden="true">
         ⌄
@@ -1300,7 +1336,13 @@ function SearchableSelect({
                 id={`${listId}-${optionIndex}`}
                 role="option"
                 aria-selected={option.value === value}
-                className={optionIndex === activeIndex ? "highlighted" : option.value === value ? "selected" : ""}
+                className={
+                  optionIndex === activeIndex
+                    ? "highlighted"
+                    : option.value === value
+                      ? "selected"
+                      : ""
+                }
                 onMouseEnter={() => setActiveIndex(optionIndex)}
                 onMouseDown={(event) => {
                   event.preventDefault();
