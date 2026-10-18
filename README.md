@@ -1037,7 +1037,91 @@ Never add a GitHub App Client Secret, private key, or personal access token to
 this repository. Owner-only writes must still be authorized by GitHub; hiding
 editor controls in the browser is not a security boundary.
 
-The generated static site is written to `dist/`. The included GitHub Actions workflow validates, builds, and deploys the site to GitHub Pages on pushes to `main`. In the repository settings, choose **GitHub Actions** as the Pages source.
+## GitHub Pages deployment
+
+The generated static site is written to `dist/`. The workflow in
+`.github/workflows/deploy.yml` validates, builds, uploads, and deploys that
+directory to GitHub Pages whenever a change is pushed to `main`. It can also be
+started manually.
+
+### One-time Pages setup
+
+GitHub Pages must be enabled in the repository before the deployment workflow
+can query or deploy the site. A repository administrator or maintainer should:
+
+1. Open the repository on GitHub.
+2. Select **Settings**. If the tab is hidden, open the repository navigation
+   dropdown and select **Settings**.
+3. In the left sidebar, under **Code and automation**, select **Pages**.
+4. Find **Build and deployment**.
+5. Set **Source** to **GitHub Actions**.
+6. Leave the other Pages settings at their defaults unless a custom domain is
+   intentionally being configured.
+
+Do not select **Deploy from a branch**. This project already has a custom build
+workflow and does not commit generated files to a `gh-pages` branch.
+
+GitHub Pages is available for public repositories on GitHub Free. Private
+repository availability depends on the account or organization plan. If the
+**Pages** settings screen is unavailable, confirm that Pages and GitHub Actions
+are permitted by the account or organization policy and that the current user
+has repository administration or maintenance access.
+
+### Run or rerun the deployment
+
+After choosing **GitHub Actions** as the Pages source:
+
+1. Open the repository's **Actions** tab.
+2. Select **Validate and deploy to GitHub Pages**.
+3. Either open the failed run and select **Re-run all jobs**, or select **Run
+   workflow**, choose the `main` branch, and confirm **Run workflow**.
+4. Wait for both the `build` and `deploy` jobs to complete.
+5. Open **Settings → Pages** to find the published URL. GitHub also displays the
+   URL in the completed deployment job.
+
+Future pushes to `main` deploy automatically. Pushes to other branches do not
+deploy unless the workflow triggers are changed.
+
+### Fixing `Get Pages site failed` / `Not Found`
+
+The following error means the workflow called GitHub's Pages API before a Pages
+site existed for the repository:
+
+```text
+Error: Get Pages site failed. Please verify that the repository has Pages
+enabled and configured to build using GitHub Actions.
+Error: Not Found
+```
+
+Resolve it by completing the one-time setup above and rerunning the failed
+workflow. The existing workflow already declares the permissions used by the
+official Pages actions:
+
+```yaml
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+```
+
+`actions/configure-pages` also exposes an `enablement: true` option, but its own
+documentation says automatic enablement requires a token other than the normal
+workflow `GITHUB_TOKEN`, with additional administration and Pages write
+permissions. This repository deliberately uses the safer one-time Settings UI
+step instead of adding a privileged personal token solely to enable Pages.
+
+If the error remains after enabling Pages:
+
+1. Reopen **Settings → Pages** and confirm **Source: GitHub Actions** is still
+   selected.
+2. Confirm the workflow file exists on `main` at
+   `.github/workflows/deploy.yml`.
+3. Confirm GitHub Actions is enabled under **Settings → Actions → General**.
+4. Check whether an organization policy prevents Pages, GitHub Actions, or
+   deployment to the `github-pages` environment.
+5. Open the failed workflow and verify whether the failing step is **Configure
+   Pages**, **Upload artifact**, or **Deploy to GitHub Pages**; each indicates a
+   different stage of the deployment.
 
 The current release implements public browsing, device-local favourites, Google
 Telugu pronunciation, and GitHub owner authentication. It is built and deployed
