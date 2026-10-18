@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getAllAudioUrls } from "google-tts-api/dist/getAudioUrl";
 import {
   ArrowLeft,
   ArrowRight,
@@ -34,7 +33,7 @@ import {
   teachers,
 } from "../services/catalogue";
 import { recipeSearchText } from "../search/recipeSearch";
-import type { Difficulty, Recipe } from "../types/models";
+import type { Difficulty, Ingredient, Recipe } from "../types/models";
 import { Brand } from "../components/Brand";
 import { OwnerAccess } from "../components/OwnerAccess";
 import {
@@ -54,6 +53,7 @@ import {
 import { publicAssetUrl } from "../routing/publicAssetUrl";
 import { deleteRecipeFromGitHub } from "../services/githubRecipes";
 import { CataloguePage } from "../components/CataloguePage";
+import { ingredientPronunciationPath } from "../services/pronunciation";
 
 const minutes = (value?: number) => {
   if (value == null) return "Not specified";
@@ -868,7 +868,10 @@ function RecipeDetail({
       </main>
     );
 
-  const playPronunciation = (teluguText: string, audioPath?: string) => {
+  const playPronunciation = (
+    teluguText: string,
+    audioPaths?: string | string[],
+  ) => {
     playbackIdRef.current += 1;
     audioRef.current?.pause();
     audioRef.current = null;
@@ -877,15 +880,16 @@ function RecipeDetail({
       setSpeakingText(null);
       return;
     }
-    const urls = audioPath
-      ? [publicAssetUrl(audioPath)]
-      : getAllAudioUrls(teluguText, {
-          lang: "te",
-          slow: false,
-          splitPunct: ",,।",
-        }).map((item) => item.url);
+    const paths = Array.isArray(audioPaths)
+      ? audioPaths
+      : audioPaths
+        ? [audioPaths]
+        : [];
+    const urls = paths.map((path) => publicAssetUrl(path));
     if (urls.length === 0) {
-      setAudioError("There is no Telugu text to read.");
+      setAudioError(
+        "Pronunciation audio is not included in this deployment yet.",
+      );
       return;
     }
     const playbackId = playbackIdRef.current;
@@ -905,7 +909,7 @@ function RecipeDetail({
         audioRef.current = null;
         setSpeakingText(null);
         setAudioError(
-          "Google could not play the Telugu audio. Check your connection and try again.",
+          "This pronunciation audio is missing from the deployed site. Run the GitHub Pages workflow again.",
         );
       };
       void audio.play().catch(() => audio.onerror?.(new Event("error")));
@@ -1084,6 +1088,12 @@ function RecipeDetail({
                         )
                         .filter(Boolean)
                         .join(", "),
+                      recipe.ingredients
+                        .map((item) => ingredientById(item.ingredientId))
+                        .filter((item): item is Ingredient =>
+                          Boolean(item?.telugu),
+                        )
+                        .map(ingredientPronunciationPath),
                     )
                   }
                 >
@@ -1164,7 +1174,7 @@ function RecipeDetail({
                           onClick={() =>
                             playPronunciation(
                               ingredient.telugu!,
-                              ingredient.pronunciationAudio,
+                              ingredientPronunciationPath(ingredient),
                             )
                           }
                           aria-label={`Hear the Telugu pronunciation of ${ingredient.english}`}
