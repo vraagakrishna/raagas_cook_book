@@ -16,6 +16,7 @@ export function ImageSourcePicker({
   const [preview, setPreview] = useState("");
   const [zoom, setZoom] = useState(1);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const closeCamera = () => {
@@ -53,6 +54,40 @@ export function ImageSourcePicker({
       streamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, [cameraOpen, photo]);
+
+  useEffect(() => {
+    if (!cameraOpen || photo) return;
+    let frame = 0;
+    const drawPreview = () => {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      if (video?.videoWidth && video.videoHeight && canvas) {
+        const bounds = canvas.getBoundingClientRect();
+        const pixelRatio = window.devicePixelRatio || 1;
+        canvas.width = Math.max(1, Math.round(bounds.width * pixelRatio));
+        canvas.height = Math.max(1, Math.round(bounds.height * pixelRatio));
+        const context = canvas.getContext("2d");
+        if (context) {
+          const sourceWidth = video.videoWidth / zoom;
+          const sourceHeight = video.videoHeight / zoom;
+          context.drawImage(
+            video,
+            (video.videoWidth - sourceWidth) / 2,
+            (video.videoHeight - sourceHeight) / 2,
+            sourceWidth,
+            sourceHeight,
+            0,
+            0,
+            canvas.width,
+            canvas.height,
+          );
+        }
+      }
+      frame = window.requestAnimationFrame(drawPreview);
+    };
+    frame = window.requestAnimationFrame(drawPreview);
+    return () => window.cancelAnimationFrame(frame);
+  }, [cameraOpen, photo, zoom]);
 
   const takePhoto = () => {
     const video = videoRef.current;
@@ -148,17 +183,22 @@ export function ImageSourcePicker({
               <X size={18} />
             </button>
             <h2>Take a photo</h2>
-            {preview ? (
-              <img src={preview} alt="Captured preview" />
-            ) : (
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                style={{ transform: `scale(${zoom})` }}
-              />
-            )}
+            <div className="camera-preview">
+              {preview ? (
+                <img src={preview} alt="Captured preview" />
+              ) : (
+                <>
+                  <video
+                    ref={videoRef}
+                    className="camera-source"
+                    autoPlay
+                    playsInline
+                    muted
+                  />
+                  <canvas ref={canvasRef} aria-label="Live camera preview" />
+                </>
+              )}
+            </div>
             {!preview && (
               <label className="camera-zoom">
                 <span>Zoom</span>
