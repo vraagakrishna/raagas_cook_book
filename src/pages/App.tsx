@@ -258,13 +258,13 @@ function Header({
         aria-label="Main navigation"
       >
         <button
-          className="nav-active"
+          className={currentPage === "home" ? "nav-active" : undefined}
           onClick={() => {
             onHome();
             setOpen(false);
           }}
         >
-          All recipes
+          Home
         </button>
         <button
           onClick={() => {
@@ -276,11 +276,11 @@ function Header({
         </button>
         <button
           onClick={() => {
-            onSection("story");
+            onSection("recipes");
             setOpen(false);
           }}
         >
-          Our story
+          Recipes
         </button>
       </nav>
       <div className="header-actions">
@@ -348,6 +348,10 @@ function Library({
   const [listening, setListening] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState("");
   const [collection, setCollection] = useState("all");
+  const [page, setPage] = useState(1);
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+
+  const recipesPerPage = 20;
 
   const filtered = useMemo(() => {
     const normalizedQuery = query.normalize("NFC").trim().toLocaleLowerCase();
@@ -404,28 +408,100 @@ function Library({
     (value) => value !== "all",
   ).length;
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / recipesPerPage));
+  const visibleRecipes = filtered.slice(
+    (page - 1) * recipesPerPage,
+    page * recipesPerPage,
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, category, teacher, difficulty, duration, sort, collection]);
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
+
+  useEffect(
+    () => () => {
+      recognitionRef.current?.stop();
+    },
+    [],
+  );
+
   const startListening = () => {
+    if (listening) {
+      recognitionRef.current?.stop();
+      setVoiceMessage("Voice search stopped.");
+      return;
+    }
     const Recognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!Recognition) {
       setVoiceMessage("Voice search is not supported in this browser.");
       return;
     }
+    if (!window.isSecureContext) {
+      setVoiceMessage("Voice search requires HTTPS or localhost.");
+      return;
+    }
     const recognition = new Recognition();
+    recognitionRef.current = recognition;
     recognition.lang = "en-IN";
     recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
     recognition.onresult = (event) => {
       updateQuery(event.results[0][0].transcript, true);
       setVoiceMessage("Voice search added.");
     };
-    recognition.onerror = () =>
+    recognition.onerror = (event) => {
+      const messages: Record<string, string> = {
+        "no-speech":
+          "No speech was detected. Select the microphone and try again.",
+        "audio-capture":
+          "The browser could not capture audio. Check that no other app is using the microphone.",
+        "not-allowed":
+          "The browser blocked speech recognition. Allow microphone access for this site and try again.",
+        "service-not-allowed":
+          "This browser has disabled its speech-recognition service.",
+        network:
+          "The microphone is available, but the browser's speech-recognition service could not connect.",
+        "language-not-supported": `Speech recognition does not support ${recognition.lang} on this browser.`,
+        aborted: "Voice search was stopped.",
+      };
       setVoiceMessage(
-        "Could not access the microphone. You can keep typing instead.",
+        messages[event.error] ?? `Voice search failed (${event.error}).`,
       );
-    recognition.onend = () => setListening(false);
+    };
+    recognition.onend = () => {
+      if (recognitionRef.current === recognition) {
+        recognitionRef.current = null;
+        setListening(false);
+      }
+    };
     setListening(true);
     setVoiceMessage("Listening…");
-    recognition.start();
+    try {
+      recognition.start();
+    } catch {
+      recognitionRef.current = null;
+      setListening(false);
+      setVoiceMessage(
+        "Voice search could not start. Wait a moment and try again.",
+      );
+    }
+  };
+
+  const goToPage = (nextPage: number) => {
+    setPage(Math.min(Math.max(nextPage, 1), totalPages));
+    window.setTimeout(
+      () =>
+        document
+          .getElementById("recipes")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      0,
+    );
   };
 
   const clearFilters = () => {
@@ -674,7 +750,11 @@ function Library({
         {(query || activeFilterCount > 0) && (
           <div className="results-summary">
             <span>
-              Showing {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+              Showing {visibleRecipes.length}
+              {visibleRecipes.length < filtered.length
+                ? ` of ${filtered.length}`
+                : ""}{" "}
+              result{filtered.length !== 1 ? "s" : ""}
               {query ? (
                 <>
                   {" "}
@@ -688,18 +768,57 @@ function Library({
           </div>
         )}
         {filtered.length > 0 ? (
-          <div className="recipe-grid">
-            {filtered.map((recipe, index) => (
-              <RecipeCard
-                key={recipe.id}
-                recipe={recipe}
-                index={index}
-                onOpen={() => onOpenRecipe(recipe.id)}
-                saved={favourites.includes(recipe.id)}
-                onToggleFavourite={() => onToggleFavourite(recipe.id)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="recipe-grid">
+              {visibleRecipes.map((recipe, index) => (
+                <RecipeCard
+                  key={recipe.id}
+                  recipe={recipe}
+                  index={(page - 1) * recipesPerPage + index}
+                  onOpen={() => onOpenRecipe(recipe.id)}
+                  saved={favourites.includes(recipe.id)}
+                  onToggleFavourite={() => onToggleFavourite(recipe.id)}
+                />
+              ))}
+            </div>
+            {totalPages > 1 && (
+              <nav className="pagination" aria-label="Recipe pages">
+                <button
+                  onClick={() => goToPage(page - 1)}
+                  disabled={page === 1}
+                  aria-label="Previous recipe page"
+                >
+                  <ArrowLeft size={16} /> Previous
+                </button>
+                <div className="pagination-pages">
+                  {Array.from(
+                    { length: totalPages },
+                    (_, index) => index + 1,
+                  ).map((pageNumber) => (
+                    <button
+                      key={pageNumber}
+                      className={pageNumber === page ? "active" : undefined}
+                      onClick={() => goToPage(pageNumber)}
+                      aria-current={pageNumber === page ? "page" : undefined}
+                      aria-label={`Recipe page ${pageNumber}`}
+                    >
+                      {pageNumber}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => goToPage(page + 1)}
+                  disabled={page === totalPages}
+                  aria-label="Next recipe page"
+                >
+                  Next <ArrowRight size={16} />
+                </button>
+                <span className="sr-only" aria-live="polite">
+                  Page {page} of {totalPages}
+                </span>
+              </nav>
+            )}
+          </>
         ) : (
           <div className="empty-state">
             <span>🥄</span>

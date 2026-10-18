@@ -654,7 +654,8 @@ Provide at least a predictable default ordering. Recommended options:
 
 - Keep page state consistent with the active result set.
 
-- Decide whether query/filter/page state should be encoded in URL parameters before implementation.
+- Keep query, filter, and page state in the current page session rather than URL
+  parameters. Opening or refreshing the library starts on page 1.
 
 - Recipe detail URLs must remain stable regardless of pagination.
 
@@ -875,7 +876,7 @@ The application is not ready for release until all of the following are true:
 
 - [x] Recipe cards show the agreed metadata.
 
-- [ ] Pagination works and responds correctly to filters/search.
+- [x] Pagination works and responds correctly to filters/search.
 
 - [x] Search covers names, nicknames, ingredients, steps, teachers, and categories.
 
@@ -887,15 +888,15 @@ The application is not ready for release until all of the following are true:
 
 - [x] Recipe identity and filenames do not depend on recipe names.
 
-- [ ] Ingredients use a master catalogue with autocomplete and reusable photos.
+- [x] Ingredients use a master catalogue with autocomplete and reusable photos.
 
 - [x] Teacher and category data are structured and referenced by stable IDs.
 
-- [ ] Recipe, ingredient, and step images are stored in the repository.
+- [x] Recipe, ingredient, and step images are stored in the repository.
 
 - [ ] Image extension/type, size, dimensions, and decoding are validated.
 
-- [ ] Telugu read-aloud is available where the browser/device supports it, with a fallback.
+- [x] Telugu read-aloud is available where the browser/device supports it, with a fallback.
 
 - [ ] Voice search is available where supported, with ordinary text search as a fallback.
 
@@ -906,7 +907,7 @@ The application is not ready for release until all of the following are true:
 
 - [x] GitHub Actions validates, builds, and deploys the site.
 
-- [ ] The project can be deployed without a paid service under the selected usage and plan limits.
+- [x] The project can be deployed without a paid service under the selected usage and plan limits.
 
 - [ ] Automated tests cover core behavior, data integrity, and security boundaries.
 
