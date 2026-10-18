@@ -90,15 +90,27 @@ A login screen that merely hides edit buttons is not security. Any authorization
 
 ### Required security properties
 
-- No repository write token or secret is shipped to the browser.
+- No repository write token or secret is embedded in the source, build,
+  deployment, URL, or browser storage.
+
+- The owner supplies a fine-grained GitHub personal access token at sign-in.
+  The token is restricted to this repository and `Contents: read and write`.
+
+- The supplied token is held only in JavaScript memory. Signing out, refreshing,
+  closing, or navigating away from the tab erases it.
 
 - Visitors cannot use browser developer tools or direct API calls to bypass authorization.
 
-- Write operations are authenticated and authorized outside the trusted frontend.
+- Write operations are authenticated and authorized by GitHub's API, not by the
+  visibility of frontend controls.
 
 - Write operations validate the request and restrict writes to expected recipe, master-data, and image paths.
 
-- A write request cannot alter workflows, application code, arbitrary repository files, or deployment configuration.
+- The token does not receive `Workflows` permission, so it cannot modify files
+  under `.github/workflows`. The application must only offer writes to expected
+  recipe, master-data, and image paths. Because `Contents: write` applies across
+  the selected repository, the owner must use the token only on the trusted
+  deployed site or local development copy.
 
 - Credentials and session tokens are not logged or included in error messages.
 
@@ -106,11 +118,20 @@ A login screen that merely hides edit buttons is not security. Any authorization
 
 - Concurrent writes must detect stale versions/conflicts rather than silently overwrite a newer edit.
 
-### Architecture decision still to settle
+### Selected write architecture
 
-A static site cannot securely commit files to GitHub on its own. Before implementing create/edit/duplicate operations, choose and document a secure write mechanism that satisfies the zero-cost goal. Candidates include a tightly controlled GitHub-based workflow or a suitable free-tier serverless write boundary. Check current GitHub and provider limits and terms; do not assume that a workflow trigger is a secure submission endpoint.
+The application is frontend-only and uses no service other than GitHub. The
+owner manually enters a fine-grained personal access token for an editing
+session. GitHub validates the token, owner identity, repository access, and each
+write request. Future create/edit operations will use GitHub's repository
+contents API and the current file SHA so concurrent changes fail instead of
+silently overwriting newer content.
 
-If the only feasible approach would require a paid service, explain the trade-off and obtain approval before proceeding. Do not fall back to embedding a write-capable token in the frontend.
+This is an explicit usability/security trade-off required by the frontend-only
+architecture. A conventional password or automatic "Sign in with GitHub" flow
+would require a backend to protect credentials and exchange authorization
+codes. The token must therefore never be persisted, and it should have a short
+expiration and the minimum repository permissions documented below.
 
 ## 5. Authentication and session behavior
 
@@ -120,9 +141,11 @@ If the only feasible approach would require a paid service, explain the trade-of
 
 - Hide or disable owner controls for signed-out visitors, but enforce authorization at the write boundary as well.
 
-- The owner wants to remain signed in on their own device.
+- Owner access lasts only for the current loaded tab. Refreshing requires the
+  token to be entered again.
 
-- Persistent login must use a properly designed session or identity mechanism. Storing a password or a long-lived repository token in `localStorage` is prohibited.
+- Storing a password or repository token in `localStorage`, `sessionStorage`,
+  IndexedDB, cookies, or another persistent browser store is prohibited.
 
 - Browser storage may hold a non-sensitive preference or an appropriately designed session reference only when the authentication implementation supports it safely.
 
@@ -130,11 +153,10 @@ If the only feasible approach would require a paid service, explain the trade-of
 
 - Do not claim that a client-side password check protects a public repository.
 
-- Owner identity uses a GitHub App with Device Flow. The public Client ID starts
-  the flow, GitHub returns the authenticated account, and the app accepts access
-  only when both its immutable numeric user ID and username match the configured
-  owner. The access token is kept in `sessionStorage`, never in repository data
-  or `localStorage`.
+- Owner identity uses a fine-grained GitHub personal access token entered at
+  runtime. The app accepts access only when GitHub returns both the configured
+  immutable numeric user ID and username and confirms push access to the
+  configured repository. The token stays only in memory.
 
 ## 6. Recipe data model
 
@@ -861,7 +883,8 @@ The application is not ready for release until all of the following are true:
 
 - [ ] Successful edits are committed to GitHub and survive a browser/device change.
 
-- [ ] No permanent write credential is exposed to the public frontend.
+- [ ] No write credential is embedded in the public frontend or persisted in
+      browser storage.
 
 - [ ] GitHub Actions validates, builds, and deploys the site.
 
@@ -875,9 +898,12 @@ The application is not ready for release until all of the following are true:
 
 Do not silently assume answers to these questions:
 
-1. **Write mechanism:** Which secure, zero-cost-compatible mechanism will commit browser-submitted changes to GitHub?
+1. **Write mechanism:** _Settled: a repository-limited fine-grained GitHub token
+   entered by the owner for the current in-memory editing session._
 
-2. **Authentication:** Which identity provider or authentication mechanism will protect owner-only writes and support a persistent session safely?
+2. **Authentication:** _Settled: GitHub validates the fine-grained token and the
+   configured username, numeric user ID, and repository. The session is
+   intentionally not persistent._
 
 3. **Saving experience:** Should Save commit directly, or create a proposed change/pull request that the owner approves?
 
@@ -966,63 +992,32 @@ npm run build
 The values used by owner sign-in are stored in
 `src/config/appConfig.ts`. They are public identifiers, not secrets.
 
-#### 1. Create the GitHub App
+#### 1. Create the fine-grained token
 
 1. Sign in to GitHub.
-2. Open your profile menu and select **Settings**.
-3. Select **Developer settings** in the left sidebar.
-4. Select **GitHub Apps**, then **New GitHub App**.
-5. Enter a unique app name, such as `Raagas Cook Book Owner`.
-6. For **Homepage URL**, enter the deployed GitHub Pages URL. The local
-   development URL can be used temporarily while testing.
-7. Configure **Identifying and authorizing users** using the table below.
-8. Leave **Setup URL** blank and leave **Redirect on update** disabled.
-9. Under **Webhook**, disable **Active**. This app does not receive webhook
-   events, so it does not need a webhook URL or webhook secret.
-10. Under **Permissions**, select **No access** wherever GitHub permits it. The
-    current login only verifies identity.
-11. Do not subscribe to any webhook events.
-12. Under **Where can this GitHub App be installed?**, select **Only on this
-    account**.
-13. Select **Create GitHub App**. Do not generate a Client Secret or private key
-    for this frontend.
+2. Open **Settings → Developer settings → Personal access tokens → Fine-grained
+   tokens**.
+3. Select **Generate new token**.
+4. Set a recognizable name such as `Raagas Cook Book editing`.
+5. Choose a short expiration. Thirty days is recommended; generate a replacement
+   when it expires.
+6. For **Resource owner**, select the account that owns this repository.
+7. Under **Repository access**, choose **Only select repositories** and select
+   only `raagas_cook_book`.
+8. Under **Repository permissions**, set **Contents** to **Read and write**.
+   `Metadata: Read-only` is added automatically.
+9. Leave every other permission at **No access**. In particular, do not grant
+   **Workflows**, **Administration**, or organization permissions.
+10. Generate the token and copy it immediately. GitHub shows its full value only
+    once. A fine-grained token begins with `github_pat_`.
 
-Use these exact settings under **Identifying and authorizing users**:
+Never put this token in a source file, `.env` file used by Vite, GitHub Actions
+build variable, commit, issue, screenshot, URL, or chat message. If it is ever
+exposed, revoke it immediately in the fine-grained token settings and create a
+replacement.
 
-| GitHub setting                                             | Value for this project                                               |
-| ---------------------------------------------------------- | -------------------------------------------------------------------- |
-| **Callback URL** or **Redirect URI**                       | Leave blank. Device Flow does not use it.                            |
-| **Expire user authorization tokens**                       | This is checked by default. **Leave it checked. Do not uncheck it.** |
-| **Request user authorization (OAuth) during installation** | Leave disabled.                                                      |
-| **Enable Device Flow**                                     | Enable.                                                              |
+#### 2. Find each public configuration value
 
-GitHub ignores callback URLs when Device Flow is used. Do not uncheck **Expire
-user authorization tokens**. Leaving the default checkmark in place limits a
-user access token to eight hours by default. This application does not store a
-refresh token, so the owner signs in again after the token expires. Requiring a
-new sign-in is intentional and safer than retaining a permanent GitHub token in
-the browser.
-
-For identity-only sign-in, the GitHub App does not need repository permissions.
-When repository editing is implemented, grant only the specific permission that
-workflow requires and install the app only on this cookbook repository.
-
-#### 2. Enable Device Flow
-
-If Device Flow was not enabled during registration:
-
-1. Return to **Settings → Developer settings → GitHub Apps**.
-2. Select **Edit** next to the new app.
-3. Under **Identifying and authorizing users**, enable **Device Flow**.
-4. Confirm that **Request user authorization (OAuth) during installation** is
-   disabled and that **Expire user authorization tokens** remains checked. Do
-   not uncheck it.
-5. Save the changes.
-
-#### 3. Find each configuration value
-
-- `YOUR_GITHUB_APP_CLIENT_ID`: On the GitHub App's settings page, copy **Client
-  ID**. Do not copy **App ID**; they are different values.
 - `YOUR_GITHUB_USERNAME`: Open your GitHub profile. The username is the segment
   after `github.com/` in the profile URL. For `https://github.com/octocat`, the
   value is `octocat`.
@@ -1043,7 +1038,6 @@ Edit `src/config/appConfig.ts` and preserve the quotation marks:
 ```ts
 export const appConfig = {
   github: {
-    clientId: "Iv1.EXAMPLE",
     ownerUsername: "octocat",
     ownerUserId: "1",
     repositoryOwner: "octocat",
@@ -1052,14 +1046,29 @@ export const appConfig = {
 } as const;
 ```
 
-The sign-in flow uses the Client ID, username, and numeric user ID. The numeric
-ID is the durable identity check because a GitHub username can be renamed. The
-repository owner and repository name are retained for the owner-only recipe
-write workflow.
+The numeric ID is the durable identity check because a GitHub username can be
+renamed. All four configured values are public; the token is the only credential
+and is entered at runtime.
 
-Never add a GitHub App Client Secret, private key, or personal access token to
-this repository. Owner-only writes must still be authorized by GitHub; hiding
-editor controls in the browser is not a security boundary.
+#### 5. Sign in and sign out
+
+1. Open the cookbook and select **Owner sign in**.
+2. Paste the fine-grained token into the password-style field.
+3. Select **Unlock owner access**. The app asks GitHub to verify the token,
+   configured owner identity, and repository write access.
+4. Use the sign-out button when finished.
+
+The token is held only in the current page's memory. It is not written to
+`localStorage`, `sessionStorage`, IndexedDB, a cookie, or the repository. A page
+refresh or closed tab signs the owner out. This inconvenience is intentional:
+without a backend, persisting a repository write credential would increase the
+damage possible from browser extensions, injected scripts, or someone using the
+same device.
+
+If login fails, confirm that the token has not expired, belongs to the configured
+owner, selects the configured repository, and grants `Contents: Read and write`.
+Do not replace it with a classic token, repository-wide password, GitHub App
+secret, or hard-coded credential.
 
 ## GitHub Pages deployment
 
@@ -1148,6 +1157,8 @@ If the error remains after enabling Pages:
    different stage of the deployment.
 
 The current release implements public browsing, device-local favourites, Google
-Telugu pronunciation, and GitHub owner authentication. It is built and deployed
-only through GitHub Pages and GitHub Actions. Recipe editing remains locked until
-its GitHub write workflow and permissions are implemented.
+Telugu pronunciation, and in-memory owner authentication using a repository-
+limited fine-grained GitHub token. It is built and deployed only through GitHub
+Pages and GitHub Actions. Recipe editing forms and GitHub save operations remain
+to be implemented; the authenticated token is never persisted between page
+loads.

@@ -250,21 +250,51 @@ select:focus-visible {
   cursor: wait;
   opacity: 0.72;
 }
-.device-code {
+.owner-token-form {
+  margin-top: 22px;
+  text-align: left;
+}
+.owner-token-form label {
   display: block;
-  margin: 18px 0 4px;
+  margin-bottom: 7px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+.owner-token-form input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: white;
   color: var(--ink);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 30px;
-  letter-spacing: 0.14em;
+  font-size: 13px;
 }
-.waiting-message {
-  margin-top: 17px;
+.owner-token-form small {
+  display: block;
+  margin-top: 9px;
+  color: #777f75;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.owner-token-form .sign-in-primary {
+  margin-top: 18px;
+}
+.token-help-link {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  color: #777f75;
+  gap: 5px;
+  margin-top: 15px;
+  color: var(--sage-dark);
+  font-size: 12px;
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+.token-help-link:hover {
+  color: var(--terracotta);
 }
 .auth-error,
 .audio-error {

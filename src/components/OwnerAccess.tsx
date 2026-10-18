@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import {
   Check,
   ExternalLink,
@@ -8,32 +8,20 @@ import {
   X,
 } from "lucide-react";
 import {
-  clearGitHubToken,
-  type DeviceAuthorization,
   type GitHubUser,
-  requestDeviceAuthorization,
-  saveGitHubToken,
-  savedGitHubToken,
-  verifyOwnerToken,
-  waitForDeviceAuthorization,
+  signInOwner,
+  signOutOwner,
 } from "../services/githubAuth";
 
 export function OwnerAccess() {
   const [user, setUser] = useState<GitHubUser | null>(null);
   const [open, setOpen] = useState(false);
-  const [authorization, setAuthorization] =
-    useState<DeviceAuthorization | null>(null);
   const [working, setWorking] = useState(false);
   const [error, setError] = useState("");
   const abortRef = useRef<AbortController | null>(null);
+  const tokenInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    const token = savedGitHubToken();
-    if (token) {
-      void verifyOwnerToken(token)
-        .then(setUser)
-        .catch(() => clearGitHubToken());
-    }
     return () => abortRef.current?.abort();
   }, []);
 
@@ -41,26 +29,23 @@ export function OwnerAccess() {
     abortRef.current?.abort();
     abortRef.current = null;
     setOpen(false);
-    setAuthorization(null);
     setWorking(false);
     setError("");
   };
 
-  const signIn = async () => {
+  const signIn = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
     setWorking(true);
     setError("");
     try {
-      const deviceAuthorization = await requestDeviceAuthorization();
-      setAuthorization(deviceAuthorization);
-      const token = await waitForDeviceAuthorization(
-        deviceAuthorization,
+      const owner = await signInOwner(
+        tokenInputRef.current?.value ?? "",
         controller.signal,
       );
-      const owner = await verifyOwnerToken(token);
-      saveGitHubToken(token);
+      if (tokenInputRef.current) tokenInputRef.current.value = "";
       setUser(owner);
       close();
     } catch (caught) {
@@ -74,7 +59,7 @@ export function OwnerAccess() {
   };
 
   const signOut = () => {
-    clearGitHubToken();
+    signOutOwner();
     setUser(null);
   };
 
@@ -116,46 +101,54 @@ export function OwnerAccess() {
             </button>
             <KeyRound className="github-mark" size={32} />
             <p className="kicker">OWNER ACCESS</p>
-            <h2 id="github-sign-in-title">Sign in with GitHub</h2>
-            {!authorization ? (
-              <>
-                <p>
-                  GitHub verifies your identity. Only the configured owner
-                  account is accepted.
-                </p>
-                <button
-                  className="sign-in-primary"
-                  onClick={signIn}
-                  disabled={working}
-                >
-                  {working ? (
-                    <LoaderCircle className="spin" size={18} />
-                  ) : (
-                    <KeyRound size={18} />
-                  )}
-                  {working ? "Connecting…" : "Continue with GitHub"}
-                </button>
-              </>
-            ) : (
-              <>
-                <p>Enter this one-time code on GitHub:</p>
-                <strong className="device-code">
-                  {authorization.userCode}
-                </strong>
-                <a
-                  className="sign-in-primary"
-                  href={authorization.verificationUri}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Open GitHub <ExternalLink size={16} />
-                </a>
-                <small className="waiting-message">
-                  <LoaderCircle className="spin" size={15} /> Waiting for
-                  GitHub…
-                </small>
-              </>
-            )}
+            <h2 id="github-sign-in-title">Owner sign in</h2>
+            <p>
+              Enter a fine-grained GitHub token for this repository. It stays
+              only in this tab's memory and is erased when you sign out or
+              refresh.
+            </p>
+            <form
+              className="owner-token-form"
+              onSubmit={signIn}
+              autoComplete="off"
+            >
+              <label htmlFor="owner-github-token">Fine-grained token</label>
+              <input
+                ref={tokenInputRef}
+                id="owner-github-token"
+                name="owner-github-token"
+                type="password"
+                autoComplete="new-password"
+                spellCheck={false}
+                placeholder="github_pat_…"
+                disabled={working}
+                autoFocus
+              />
+              <small>
+                The token must select only this cookbook repository and have
+                Contents read and write permission.
+              </small>
+              <button
+                type="submit"
+                className="sign-in-primary"
+                disabled={working}
+              >
+                {working ? (
+                  <LoaderCircle className="spin" size={18} />
+                ) : (
+                  <KeyRound size={18} />
+                )}
+                {working ? "Verifying…" : "Unlock owner access"}
+              </button>
+            </form>
+            <a
+              className="token-help-link"
+              href="https://github.com/settings/personal-access-tokens/new"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Create a token on GitHub <ExternalLink size={13} />
+            </a>
             {error && (
               <p className="auth-error" role="alert">
                 {error}
