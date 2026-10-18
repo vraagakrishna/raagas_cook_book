@@ -975,14 +975,33 @@ The values used by owner sign-in are stored in
 5. Enter a unique app name, such as `Raagas Cook Book Owner`.
 6. For **Homepage URL**, enter the deployed GitHub Pages URL. The local
    development URL can be used temporarily while testing.
-7. A callback URL is not required by this implementation because it uses Device
-   Flow. GitHub ignores the callback setting for Device Flow.
-8. Disable the webhook if GitHub shows the **Active** webhook checkbox. This app
-   does not receive webhook events.
-9. Under **Where can this GitHub App be installed?**, select **Only on this
-   account**.
-10. Register the app. Do not generate a Client Secret or private key for this
-    frontend.
+7. Configure **Identifying and authorizing users** using the table below.
+8. Leave **Setup URL** blank and leave **Redirect on update** disabled.
+9. Under **Webhook**, disable **Active**. This app does not receive webhook
+   events, so it does not need a webhook URL or webhook secret.
+10. Under **Permissions**, select **No access** wherever GitHub permits it. The
+    current login only verifies identity.
+11. Do not subscribe to any webhook events.
+12. Under **Where can this GitHub App be installed?**, select **Only on this
+    account**.
+13. Select **Create GitHub App**. Do not generate a Client Secret or private key
+    for this frontend.
+
+Use these exact settings under **Identifying and authorizing users**:
+
+| GitHub setting                                             | Value for this project                                               |
+| ---------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Callback URL** or **Redirect URI**                       | Leave blank. Device Flow does not use it.                            |
+| **Expire user authorization tokens**                       | This is checked by default. **Leave it checked. Do not uncheck it.** |
+| **Request user authorization (OAuth) during installation** | Leave disabled.                                                      |
+| **Enable Device Flow**                                     | Enable.                                                              |
+
+GitHub ignores callback URLs when Device Flow is used. Do not uncheck **Expire
+user authorization tokens**. Leaving the default checkmark in place limits a
+user access token to eight hours by default. This application does not store a
+refresh token, so the owner signs in again after the token expires. Requiring a
+new sign-in is intentional and safer than retaining a permanent GitHub token in
+the browser.
 
 For identity-only sign-in, the GitHub App does not need repository permissions.
 When repository editing is implemented, grant only the specific permission that
@@ -990,10 +1009,15 @@ workflow requires and install the app only on this cookbook repository.
 
 #### 2. Enable Device Flow
 
+If Device Flow was not enabled during registration:
+
 1. Return to **Settings → Developer settings → GitHub Apps**.
 2. Select **Edit** next to the new app.
 3. Under **Identifying and authorizing users**, enable **Device Flow**.
-4. Save the changes.
+4. Confirm that **Request user authorization (OAuth) during installation** is
+   disabled and that **Expire user authorization tokens** remains checked. Do
+   not uncheck it.
+5. Save the changes.
 
 #### 3. Find each configuration value
 
