@@ -75,5 +75,10 @@
   {
     "id": "ingredient-mutton-65a58d",
     "english": "Mutton"
+  },
+  {
+    "id": "ing-egg-5a06fe01",
+    "english": "Egg",
+    "teluguInEnglish": "egg"
   }
 ]
