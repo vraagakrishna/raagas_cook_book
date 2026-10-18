@@ -1,0 +1,24 @@
+{
+  "id": "3a1b0101-8c6c-4efa-80df-a61f3440ac32",
+  "name": "Egg Pulusu",
+  "categoryId": "cat-curry",
+  "teacherId": "teacher-amma",
+  "servings": 4,
+  "difficulty": "easy",
+  "ingredients": [
+    {
+      "ingredientId": "ing-egg-5a06fe01",
+      "quantity": "8",
+      "note": "2 per person"
+    }
+  ],
+  "steps": [
+    {
+      "id": "ab8706aa-b448-49a8-9839-4cdfd030e9ce",
+      "instruction": "Boil eggs"
+    }
+  ],
+  "createdAt": "2026-10-18T14:31:26.151Z",
+  "updatedAt": "2026-10-18T14:36:57.318Z",
+  "nickname": "My favorite"
+}
