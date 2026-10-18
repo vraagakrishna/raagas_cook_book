@@ -1,0 +1,7 @@
+[
+  { "id": "cat-curry", "name": "Curry" },
+  { "id": "cat-rice", "name": "Rice" },
+  { "id": "cat-breakfast", "name": "Breakfast" },
+  { "id": "cat-snack", "name": "Snack" },
+  { "id": "cat-sweet", "name": "Sweets" }
+]

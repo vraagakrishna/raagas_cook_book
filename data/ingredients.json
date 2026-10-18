@@ -1,0 +1,75 @@
+[
+  {
+    "id": "ing-chicken",
+    "english": "Chicken",
+    "telugu": "కోడి మాంసం",
+    "teluguInEnglish": "Kodi maamsam"
+  },
+  {
+    "id": "ing-onion",
+    "english": "Onion",
+    "telugu": "ఉల్లిపాయ",
+    "teluguInEnglish": "Ullipaaya"
+  },
+  {
+    "id": "ing-tomato",
+    "english": "Tomato",
+    "telugu": "టమాటా",
+    "teluguInEnglish": "Tamaata"
+  },
+  {
+    "id": "ing-chilli",
+    "english": "Green chilli",
+    "telugu": "పచ్చి మిరపకాయ",
+    "teluguInEnglish": "Pachchi mirapakaaya",
+    "image": "./images/ingredients/green-chilli.svg"
+  },
+  {
+    "id": "ing-coriander",
+    "english": "Coriander",
+    "telugu": "కొత్తిమీర",
+    "teluguInEnglish": "Kottimeera"
+  },
+  {
+    "id": "ing-rice",
+    "english": "Basmati rice",
+    "telugu": "బాస్మతి బియ్యం",
+    "teluguInEnglish": "Basmati biyyam"
+  },
+  {
+    "id": "ing-lentil",
+    "english": "Toor dal",
+    "telugu": "కంది పప్పు",
+    "teluguInEnglish": "Kandi pappu"
+  },
+  {
+    "id": "ing-tamarind",
+    "english": "Tamarind",
+    "telugu": "చింతపండు",
+    "teluguInEnglish": "Chintapandu"
+  },
+  {
+    "id": "ing-milk",
+    "english": "Milk",
+    "telugu": "పాలు",
+    "teluguInEnglish": "Paalu"
+  },
+  {
+    "id": "ing-jaggery",
+    "english": "Jaggery",
+    "telugu": "బెల్లం",
+    "teluguInEnglish": "Bellam"
+  },
+  {
+    "id": "ing-flour",
+    "english": "Rice flour",
+    "telugu": "బియ్యం పిండి",
+    "teluguInEnglish": "Biyyam pindi"
+  },
+  {
+    "id": "ing-potato",
+    "english": "Potato",
+    "telugu": "బంగాళాదుంప",
+    "teluguInEnglish": "Bangala dumpa"
+  }
+]

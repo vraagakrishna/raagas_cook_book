@@ -1,0 +1,34 @@
+{
+  "id": "a13c6b12-6545-48f3-92ef-3bdfe2acc005",
+  "name": "Bellam Paramannam",
+  "nickname": "Celebration kheer",
+  "description": "Creamy rice pudding sweetened with jaggery and perfumed with cardamom.",
+  "categoryId": "cat-sweet",
+  "teacherId": "teacher-aunt-1",
+  "servings": 6,
+  "difficulty": "easy",
+  "prepDurationMinutes": 5,
+  "cookDurationMinutes": 45,
+  "totalDurationMinutes": 50,
+  "ingredients": [
+    { "ingredientId": "ing-rice", "quantity": "½ cup" },
+    { "ingredientId": "ing-milk", "quantity": "1 litre" },
+    { "ingredientId": "ing-jaggery", "quantity": "1 cup", "note": "grated" }
+  ],
+  "steps": [
+    {
+      "id": "s1",
+      "instruction": "Cook washed rice slowly in milk until very soft and creamy."
+    },
+    {
+      "id": "s2",
+      "instruction": "Melt jaggery separately with a splash of water and strain."
+    },
+    {
+      "id": "s3",
+      "instruction": "Cool the rice slightly before stirring in jaggery syrup, cardamom and fried cashews."
+    }
+  ],
+  "createdAt": "2026-08-25T10:00:00Z",
+  "updatedAt": "2026-10-06T10:00:00Z"
+}

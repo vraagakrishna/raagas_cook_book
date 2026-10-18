@@ -1,4 +1,4 @@
-# Raaga's Cook Book — Product Requirements and Rules
+# Raaga's Cook Book
 
 > **Purpose:** This README is the product requirements baseline for Raaga's Cook Book. It defines what the application must do, how its data must be stored, and the constraints that implementation decisions must preserve.
 >
@@ -130,7 +130,11 @@ If the only feasible approach would require a paid service, explain the trade-of
 
 - Do not claim that a client-side password check protects a public repository.
 
-- Exact identity provider/session mechanism: **TBD before implementation**.
+- Owner identity uses a GitHub App with Device Flow. The public Client ID starts
+  the flow, GitHub returns the authenticated account, and the app accepts access
+  only when both its immutable numeric user ID and username match the configured
+  owner. The access token is kept in `sessionStorage`, never in repository data
+  or `localStorage`.
 
 ## 6. Recipe data model
 
@@ -232,6 +236,10 @@ Each master ingredient must have:
 - Telugu display name, when known.
 
 - Optional shared image path.
+
+- Telugu-in-English transliteration when a Telugu name is present.
+
+- Optional repository-relative pronunciation audio path.
 
 - Optional aliases/search terms.
 
@@ -547,25 +555,26 @@ For a personal cookbook of typical size, client-side search should be adequate. 
 
 - Voice search is not allowed to bypass recipe access controls (recipe viewing is public; editing remains protected).
 
-## 12. Telugu text-to-speech
+## 12. Telugu pronunciation and transliteration
 
 The owner can understand spoken Telugu but cannot comfortably read Telugu script.
 
-- Provide a speaker/read-aloud control for Telugu ingredient names and, where useful, Telugu text elsewhere in the recipe.
+- Store a readable `teluguInEnglish` transliteration for Telugu ingredient names so the owner can pronounce them without reading Telugu script.
 
-- Use the browser's speech-synthesis API if a suitable Telugu voice is available.
+- An ingredient may optionally reference a repository-hosted pronunciation audio file.
 
-- Detect available voices and choose an appropriate Telugu voice where possible.
+- Prefer a repository-hosted recording when one is available.
 
-- Provide controls to start and stop speech.
+- When no recording is available, generate Telugu audio URLs with
+  `google-tts-api` using language code `te`.
 
-- Avoid reading the entire page unexpectedly; read the selected ingredient or instruction, or provide an explicit “read recipe” action.
+- Keep pronunciation recordings in the repository and validate their paths before committing.
 
-- If no Telugu voice is installed/available, explain the limitation and keep the Telugu text visible.
+- Keep both Telugu script and Telugu-in-English text visible whether or not audio is available.
 
-- Do not promise identical voice quality or voice availability across devices.
-
-- Text-to-speech must not require a paid API by default.
+- Google pronunciation requires an internet connection and sends the Telugu text
+  being pronounced to Google Translate's TTS endpoint. `google-tts-api` is an
+  unofficial wrapper around that endpoint, not the paid Google Cloud TTS API.
 
 ## 13. Filters, sorting, and pagination
 
@@ -933,3 +942,104 @@ A feature is complete only when:
 ---
 
 **Rule for future changes:** Update this README whenever an agreed requirement changes. Treat the latest approved version as the product contract. If implementation convenience conflicts with a requirement, document the conflict and ask for a decision rather than silently changing the requirement.
+
+---
+
+## Running the application
+
+The public cookbook is implemented with React, TypeScript, and Vite.
+
+```bash
+npm install
+npm run dev
+```
+
+Production checks:
+
+```bash
+npm test
+npm run build
+```
+
+### Owner sign-in configuration
+
+The values used by owner sign-in are stored in
+`src/config/appConfig.ts`. They are public identifiers, not secrets.
+
+#### 1. Create the GitHub App
+
+1. Sign in to GitHub.
+2. Open your profile menu and select **Settings**.
+3. Select **Developer settings** in the left sidebar.
+4. Select **GitHub Apps**, then **New GitHub App**.
+5. Enter a unique app name, such as `Raagas Cook Book Owner`.
+6. For **Homepage URL**, enter the deployed GitHub Pages URL. The local
+   development URL can be used temporarily while testing.
+7. A callback URL is not required by this implementation because it uses Device
+   Flow. GitHub ignores the callback setting for Device Flow.
+8. Disable the webhook if GitHub shows the **Active** webhook checkbox. This app
+   does not receive webhook events.
+9. Under **Where can this GitHub App be installed?**, select **Only on this
+   account**.
+10. Register the app. Do not generate a Client Secret or private key for this
+    frontend.
+
+For identity-only sign-in, the GitHub App does not need repository permissions.
+When repository editing is implemented, grant only the specific permission that
+workflow requires and install the app only on this cookbook repository.
+
+#### 2. Enable Device Flow
+
+1. Return to **Settings → Developer settings → GitHub Apps**.
+2. Select **Edit** next to the new app.
+3. Under **Identifying and authorizing users**, enable **Device Flow**.
+4. Save the changes.
+
+#### 3. Find each configuration value
+
+- `YOUR_GITHUB_APP_CLIENT_ID`: On the GitHub App's settings page, copy **Client
+  ID**. Do not copy **App ID**; they are different values.
+- `YOUR_GITHUB_USERNAME`: Open your GitHub profile. The username is the segment
+  after `github.com/` in the profile URL. For `https://github.com/octocat`, the
+  value is `octocat`.
+- `YOUR_GITHUB_NUMERIC_USER_ID`: Visit
+  `https://api.github.com/users/YOUR_GITHUB_USERNAME`, replacing the final
+  segment with the username above. Copy the integer beside `"id"`. Do not use
+  `"node_id"`.
+- `YOUR_GITHUB_REPOSITORY_OWNER`: Open the cookbook repository. In
+  `https://github.com/OWNER/REPOSITORY`, copy the `OWNER` segment. For a personal
+  repository this is normally the same as the GitHub username.
+- `YOUR_GITHUB_REPOSITORY_NAME`: From the same repository URL, copy the
+  `REPOSITORY` segment exactly, without `.git`.
+
+#### 4. Replace the placeholders
+
+Edit `src/config/appConfig.ts` and preserve the quotation marks:
+
+```ts
+export const appConfig = {
+  github: {
+    clientId: "Iv1.EXAMPLE",
+    ownerUsername: "octocat",
+    ownerUserId: "1",
+    repositoryOwner: "octocat",
+    repositoryName: "raagas_cook_book",
+  },
+} as const;
+```
+
+The sign-in flow uses the Client ID, username, and numeric user ID. The numeric
+ID is the durable identity check because a GitHub username can be renamed. The
+repository owner and repository name are retained for the owner-only recipe
+write workflow.
+
+Never add a GitHub App Client Secret, private key, or personal access token to
+this repository. Owner-only writes must still be authorized by GitHub; hiding
+editor controls in the browser is not a security boundary.
+
+The generated static site is written to `dist/`. The included GitHub Actions workflow validates, builds, and deploys the site to GitHub Pages on pushes to `main`. In the repository settings, choose **GitHub Actions** as the Pages source.
+
+The current release implements public browsing, device-local favourites, Google
+Telugu pronunciation, and GitHub owner authentication. It is built and deployed
+only through GitHub Pages and GitHub Actions. Recipe editing remains locked until
+its GitHub write workflow and permissions are implemented.
