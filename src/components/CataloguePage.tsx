@@ -1,5 +1,13 @@
-import { useRef, useState } from "react";
-import { ArrowLeft, Pencil, Plus, Square, Trash2, Volume2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Pencil,
+  Plus,
+  Square,
+  Trash2,
+  Volume2,
+} from "lucide-react";
 import {
   categories,
   ingredients,
@@ -39,6 +47,8 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
   const [newTransliteration, setNewTransliteration] = useState("");
   const [newImage, setNewImage] = useState("");
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 20;
   const nameInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   useDialogDismiss(dialogOpen, () => setDialogOpen(false));
@@ -48,6 +58,27 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
       .toLocaleLowerCase()
       .includes(search.toLocaleLowerCase()),
   );
+  const totalPages = Math.max(1, Math.ceil(visible.length / itemsPerPage));
+  const pageRecords = visible.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage,
+  );
+  useEffect(() => {
+    setPage(1);
+  }, [kind, search]);
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
+  const goToPage = (nextPage: number) => {
+    setPage(Math.min(Math.max(nextPage, 1), totalPages));
+    window.setTimeout(
+      () =>
+        document
+          .querySelector(".catalogue-list")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+      0,
+    );
+  };
   const nameOf = (record: Ingredient | MasterRecord) =>
     "english" in record ? record.english : record.name;
   const readImage = (file?: File) => {
@@ -250,7 +281,7 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
       {error && !dialogOpen && <p className="editor-error">{error}</p>}
       {message && <p className="editor-success">{message}</p>}
       <div className="catalogue-list">
-        {visible.map((record) => (
+        {pageRecords.map((record) => (
           <div
             className={
               "catalogue-row" +
@@ -305,6 +336,54 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
           </div>
         ))}
       </div>
+      {visible.length > 0 && (
+        <>
+          <p className="catalogue-results-summary">
+            Showing {pageRecords.length}
+            {pageRecords.length < visible.length
+              ? ` of ${visible.length}`
+              : ""}{" "}
+            {visible.length === 1 ? "item" : "items"}
+          </p>
+          {totalPages > 1 && (
+            <nav className="pagination" aria-label={`${kind} pages`}>
+              <button
+                onClick={() => goToPage(page - 1)}
+                disabled={page === 1}
+                aria-label="Previous catalogue page"
+              >
+                <ArrowLeft size={16} /> Previous
+              </button>
+              <div className="pagination-pages">
+                {Array.from(
+                  { length: totalPages },
+                  (_, index) => index + 1,
+                ).map((pageNumber) => (
+                  <button
+                    key={pageNumber}
+                    className={pageNumber === page ? "active" : undefined}
+                    onClick={() => goToPage(pageNumber)}
+                    aria-current={pageNumber === page ? "page" : undefined}
+                    aria-label={`${kind} page ${pageNumber}`}
+                  >
+                    {pageNumber}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => goToPage(page + 1)}
+                disabled={page === totalPages}
+                aria-label="Next catalogue page"
+              >
+                Next <ArrowRight size={16} />
+              </button>
+              <span className="sr-only" aria-live="polite">
+                Page {page} of {totalPages}
+              </span>
+            </nav>
+          )}
+        </>
+      )}
       {dialogOpen && (
         <div
           className="catalogue-dialog-backdrop"

@@ -1685,6 +1685,12 @@ textarea:focus-visible {
   gap: 0.6rem;
   margin-top: 1rem;
 }
+.catalogue-results-summary {
+  margin: 14px 0 0;
+  color: #737c70;
+  font-size: 12px;
+  text-align: center;
+}
 .catalogue-row {
   display: grid;
   grid-template-columns: 56px 1fr auto auto auto;
