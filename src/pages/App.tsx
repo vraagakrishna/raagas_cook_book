@@ -35,7 +35,7 @@ import {
   teacherName,
   teachers,
 } from "../services/catalogue";
-import { recipeSearchText } from "../search/recipeSearch";
+import { recipeSearchScore } from "../search/recipeSearch";
 import type { Difficulty, Ingredient, Recipe } from "../types/models";
 import { Brand } from "../components/Brand";
 import { OwnerAccess } from "../components/OwnerAccess";
@@ -365,7 +365,13 @@ function Library({
   const filtered = useMemo(() => {
     const normalizedQuery = query.normalize("NFC").trim().toLocaleLowerCase();
     return recipeItems
-      .filter((recipe) => {
+      .map((recipe) => ({
+        recipe,
+        searchScore: normalizedQuery
+          ? recipeSearchScore(recipe, normalizedQuery)
+          : 1,
+      }))
+      .filter(({ recipe, searchScore }) => {
         const durationMatch =
           duration === "all" ||
           (duration === "short" &&
@@ -384,8 +390,7 @@ function Library({
           (collection === "amma" && recipe.teacherId === "teacher-amma") ||
           (collection === "festive" && recipe.categoryId === "cat-sweet");
         return (
-          (!normalizedQuery ||
-            recipeSearchText(recipe).includes(normalizedQuery)) &&
+          (!normalizedQuery || searchScore > 0) &&
           (category === "all" || recipe.categoryId === category) &&
           (teacher === "all" || recipe.teacherId === teacher) &&
           (difficulty === "all" || recipe.difficulty === difficulty) &&
@@ -394,13 +399,20 @@ function Library({
         );
       })
       .sort((a, b) => {
-        if (sort === "name") return a.name.localeCompare(b.name);
+        if (normalizedQuery && b.searchScore !== a.searchScore) {
+          return b.searchScore - a.searchScore;
+        }
+        const first = a.recipe;
+        const second = b.recipe;
+        if (sort === "name") return first.name.localeCompare(second.name);
         if (sort === "duration")
           return (
-            (a.totalDurationMinutes ?? -1) - (b.totalDurationMinutes ?? -1)
+            (first.totalDurationMinutes ?? -1) -
+            (second.totalDurationMinutes ?? -1)
           );
-        return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
-      });
+        return Date.parse(second.updatedAt) - Date.parse(first.updatedAt);
+      })
+      .map(({ recipe }) => recipe);
   }, [
     query,
     category,

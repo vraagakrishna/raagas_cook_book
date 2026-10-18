@@ -559,6 +559,9 @@ Behavior:
 
 - Match partial words and phrases.
 
+- Tolerate speech-recognition spacing changes and small spelling errors, then
+  rank the closest matches first.
+
 - Search should update results promptly as the user types.
 
 - Combine search with active filters.
