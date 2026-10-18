@@ -1417,11 +1417,17 @@ textarea:focus-visible {
   padding: 0;
   cursor: pointer;
 }
-.ingredient-list li:hover .ingredient-check,
 .ingredient-list li.checked .ingredient-check {
   color: white;
   background: var(--sage);
   border-color: var(--sage);
+}
+@media (hover: hover) and (pointer: fine) {
+  .ingredient-list li:hover .ingredient-check {
+    color: white;
+    background: var(--sage);
+    border-color: var(--sage);
+  }
 }
 .ingredient-list li.checked > div,
 .ingredient-list li.checked > b {
