@@ -1,6 +1,12 @@
 import { useRef, useState } from "react";
-import { getAllAudioUrls } from "google-tts-api/dist/getAudioUrl";
-import { Save, Trash2, ArrowLeft, Plus } from "lucide-react";
+import {
+  ArrowLeft,
+  Pencil,
+  Plus,
+  Square,
+  Trash2,
+  Volume2,
+} from "lucide-react";
 import {
   categories,
   ingredients,
@@ -16,6 +22,7 @@ import type { Ingredient, MasterRecord } from "../types/models";
 import { publicAssetUrl } from "../routing/publicAssetUrl";
 import { ImageSourcePicker } from "./ImageSourcePicker";
 import { closeOnBackdrop, useDialogDismiss } from "../hooks/useDialogDismiss";
+import { ingredientPronunciationPath } from "../services/pronunciation";
 
 type Kind = CatalogueFile;
 const lists = { ingredients, teachers, categories };
@@ -29,6 +36,7 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
   const [errorField, setErrorField] = useState<"name" | "image" | null>(null);
   const [saving, setSaving] = useState(false);
   const [speaking, setSpeaking] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<
     Ingredient | MasterRecord | null
@@ -188,20 +196,25 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
     await save(records.filter((r) => r.id !== record.id));
   };
   const speak = (record: Ingredient) => {
-    const text = record.teluguInEnglish || record.telugu || record.english;
     if (speaking === record.id) {
+      audioRef.current?.pause();
+      audioRef.current = null;
       setSpeaking(null);
       return;
     }
+    audioRef.current?.pause();
     const audio = new Audio(
-      getAllAudioUrls(text, { lang: "te", slow: false }).map(
-        (item) => item.url,
-      )[0],
+      publicAssetUrl(ingredientPronunciationPath(record)),
     );
+    audioRef.current = audio;
     setSpeaking(record.id);
-    audio.onended = () => setSpeaking(null);
-    audio.onerror = () => setSpeaking(null);
-    void audio.play().catch(() => setSpeaking(null));
+    const stop = () => {
+      audioRef.current = null;
+      setSpeaking(null);
+    };
+    audio.onended = stop;
+    audio.onerror = stop;
+    void audio.play().catch(stop);
   };
   return (
     <main className="catalogue-page">
@@ -269,13 +282,21 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
                 </small>
               )}
             </div>
-            {"english" in record && (
-              <button className="catalogue-speak" onClick={() => speak(record)}>
-                {speaking === record.id ? "Stop" : "Hear"}
+            {"english" in record && record.telugu && (
+              <button
+                className="catalogue-speak"
+                onClick={() => speak(record)}
+                aria-label={`${speaking === record.id ? "Stop" : "Hear"} ${record.english} in Telugu`}
+              >
+                {speaking === record.id ? (
+                  <Square size={15} />
+                ) : (
+                  <Volume2 size={15} />
+                )}
               </button>
             )}
             <button onClick={() => openDialog(record)} disabled={saving}>
-              <Save size={15} /> Edit
+              <Pencil size={15} /> Edit
             </button>
             <button
               className="danger-button"
