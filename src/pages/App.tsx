@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 import {
   ArrowLeft,
   ArrowRight,
@@ -345,11 +348,17 @@ function Library({
   const [duration, setDuration] = useState("all");
   const [sort, setSort] = useState("recent");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [listening, setListening] = useState(false);
   const [voiceMessage, setVoiceMessage] = useState("");
   const [collection, setCollection] = useState("all");
   const [page, setPage] = useState(1);
-  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const voiceWasListening = useRef(false);
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+    isMicrophoneAvailable,
+  } = useSpeechRecognition({ clearTranscriptOnListen: true });
 
   const recipesPerPage = 20;
 
@@ -422,22 +431,13 @@ function Library({
     setPage((current) => Math.min(current, totalPages));
   }, [totalPages]);
 
-  useEffect(
-    () => () => {
-      recognitionRef.current?.stop();
-    },
-    [],
-  );
-
   const startListening = () => {
     if (listening) {
-      recognitionRef.current?.stop();
+      void SpeechRecognition.stopListening();
       setVoiceMessage("Voice search stopped.");
       return;
     }
-    const Recognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Recognition) {
+    if (!browserSupportsSpeechRecognition) {
       setVoiceMessage("Voice search is not supported in this browser.");
       return;
     }
@@ -445,52 +445,22 @@ function Library({
       setVoiceMessage("Voice search requires HTTPS or localhost.");
       return;
     }
-    const recognition = new Recognition();
-    recognitionRef.current = recognition;
-    recognition.lang = "en-IN";
-    recognition.interimResults = false;
-    recognition.continuous = false;
-    recognition.maxAlternatives = 1;
-    recognition.onresult = (event) => {
-      updateQuery(event.results[0][0].transcript, true);
-      setVoiceMessage("Voice search added.");
-    };
-    recognition.onerror = (event) => {
-      const messages: Record<string, string> = {
-        "no-speech":
-          "No speech was detected. Select the microphone and try again.",
-        "audio-capture":
-          "The browser could not capture audio. Check that no other app is using the microphone.",
-        "not-allowed":
-          "The browser blocked speech recognition. Allow microphone access for this site and try again.",
-        "service-not-allowed":
-          "This browser has disabled its speech-recognition service.",
-        network:
-          "The microphone is available, but the browser's speech-recognition service could not connect.",
-        "language-not-supported": `Speech recognition does not support ${recognition.lang} on this browser.`,
-        aborted: "Voice search was stopped.",
-      };
+    if (!isMicrophoneAvailable) {
       setVoiceMessage(
-        messages[event.error] ?? `Voice search failed (${event.error}).`,
+        "Microphone access is blocked. Allow it in this site's browser settings and try again.",
       );
-    };
-    recognition.onend = () => {
-      if (recognitionRef.current === recognition) {
-        recognitionRef.current = null;
-        setListening(false);
-      }
-    };
-    setListening(true);
-    setVoiceMessage("Listening…");
-    try {
-      recognition.start();
-    } catch {
-      recognitionRef.current = null;
-      setListening(false);
-      setVoiceMessage(
-        "Voice search could not start. Wait a moment and try again.",
-      );
+      return;
     }
+    resetTranscript();
+    setVoiceMessage("Starting voice search…");
+    void SpeechRecognition.startListening({
+      continuous: false,
+      language: "en-IN",
+    }).catch(() => {
+      setVoiceMessage(
+        "Voice search could not start. Check this site's microphone permission and try again.",
+      );
+    });
   };
 
   const goToPage = (nextPage: number) => {
@@ -523,6 +493,33 @@ function Library({
       }, 40);
     }
   };
+
+  useEffect(() => {
+    if (listening) {
+      voiceWasListening.current = true;
+      setVoiceMessage("Listening…");
+      return;
+    }
+    if (!voiceWasListening.current) return;
+    voiceWasListening.current = false;
+    const spokenQuery = transcript.trim();
+    if (spokenQuery) {
+      updateQuery(spokenQuery, true);
+      setVoiceMessage("Voice search added.");
+    } else if (isMicrophoneAvailable) {
+      setVoiceMessage(
+        "No speech was detected. Select the microphone and try again.",
+      );
+    }
+  }, [isMicrophoneAvailable, listening, transcript]);
+
+  useEffect(() => {
+    if (!isMicrophoneAvailable) {
+      setVoiceMessage(
+        "Microphone access is blocked. Allow it in this site's browser settings and try again.",
+      );
+    }
+  }, [isMicrophoneAvailable]);
 
   const chooseCollection = (value: string) => {
     setCollection(value);

@@ -17,6 +17,7 @@
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "react-speech-recognition": "^4.0.1",
     "typescript": "latest",
     "vite": "latest"
   },
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "@types/react-speech-recognition": "^3.9.6",
     "vitest": "latest"
   }
 }
