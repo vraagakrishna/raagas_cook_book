@@ -1,0 +1,109 @@
+{
+  "id": "5036d3ff-5e32-40ec-a9cb-34f0a14af300",
+  "name": "Egg Pulusu",
+  "categoryId": "cat-curry",
+  "teacherId": "teacher-amma",
+  "servings": 4,
+  "difficulty": "easy",
+  "ingredients": [
+    {
+      "ingredientId": "ing-egg-5a06fe01",
+      "quantity": "8",
+      "note": "Assuming 2 per person. Boiled."
+    },
+    {
+      "ingredientId": "ing-tamarind",
+      "quantity": "Little bit",
+      "note": "Soak in water."
+    },
+    {
+      "ingredientId": "ing-onion",
+      "quantity": "1 medium",
+      "note": "Chopped."
+    },
+    {
+      "ingredientId": "ing-ginger-garlic-paste-aad4bbdf",
+      "quantity": "1 teaspoon"
+    },
+    {
+      "ingredientId": "ing-chana-dal-a2e4d217",
+      "quantity": "Part of teaspoon",
+      "note": "Part of Thalimpu Seeds"
+    },
+    {
+      "ingredientId": "ing-moong-dal-eeeaed41",
+      "quantity": "Part of teaspoon",
+      "note": "Part of Thalimpu Seeds"
+    },
+    {
+      "ingredientId": "ing-mustard-seeds-2f5623f3",
+      "quantity": "Part of teaspoon",
+      "note": "Part of Thalimpu Seeds"
+    },
+    {
+      "ingredientId": "ing-chilli-powder-914db51b",
+      "quantity": "1 teaspoon"
+    },
+    {
+      "ingredientId": "ing-salt-88e59097",
+      "quantity": "1 teaspoon"
+    },
+    {
+      "ingredientId": "ing-garam-masala-915ee4ee",
+      "quantity": "1 teaspoon"
+    },
+    {
+      "ingredientId": "ing-dhanya-powder-77d60282",
+      "quantity": "1 teaspoon"
+    },
+    {
+      "ingredientId": "ing-oil-b4b15509",
+      "quantity": "Enough to boil all the things"
+    }
+  ],
+  "steps": [
+    {
+      "id": "8281eb7a-de47-4e60-8b71-262a8dd5f93d",
+      "instruction": "Boil eggs"
+    },
+    {
+      "id": "7fc64af9-7b19-4d82-b670-3a9be48718bc",
+      "instruction": "Boil Chinthapandu"
+    },
+    {
+      "id": "09d746ff-4126-4005-9dd9-44a5c99a3802",
+      "instruction": "Cut onion"
+    },
+    {
+      "id": "4e98e690-1938-41eb-8e30-16750d21e6ce",
+      "instruction": "On stove: oil, thalimpu seeds, onion, ginger garlic paste"
+    },
+    {
+      "id": "d97b3883-e068-413d-bd29-f09a32a8a80b",
+      "instruction": "After mixed nicely, add Chilli powder, pasupu, salt, garam Masala and Dhanya powder"
+    },
+    {
+      "id": "b48af373-eb81-46be-90a6-1246f3c6e75f",
+      "instruction": "Turn off stove."
+    },
+    {
+      "id": "c1b45bcc-36cd-4cd6-8e89-af6b068d216d",
+      "instruction": "Squeeze Chinthapandu and pour that water in bowl on stove"
+    },
+    {
+      "id": "14ad01fb-ad5f-405e-a8c7-3841f2a4bc94",
+      "instruction": "Turn on stove and wait until boil."
+    },
+    {
+      "id": "a0d338c9-d66b-4095-a112-5770a16fa9fa",
+      "instruction": "Peel eggs and add eggs to bowl on stove."
+    },
+    {
+      "id": "259d93a9-a8b2-46ec-821f-1423c4755dad",
+      "instruction": "After boiling, turn off stove."
+    }
+  ],
+  "createdAt": "2026-10-18T16:23:12.186Z",
+  "updatedAt": "2026-10-18T17:12:51.733Z",
+  "nickname": "My Favorite"
+}
