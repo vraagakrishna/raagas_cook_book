@@ -27,9 +27,11 @@
     }
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@types/react-speech-recognition": "^3.9.6",
+    "tailwindcss": "^4.3.3",
     "vitest": "latest"
   }
 }

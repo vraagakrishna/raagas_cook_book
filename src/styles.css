@@ -1,3 +1,6 @@
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";
+
 :root {
   font-family: "DM Sans", system-ui, sans-serif;
   color: #2c3025;

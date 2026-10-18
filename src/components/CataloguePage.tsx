@@ -1,12 +1,5 @@
 import { useRef, useState } from "react";
-import {
-  ArrowLeft,
-  Pencil,
-  Plus,
-  Square,
-  Trash2,
-  Volume2,
-} from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Square, Trash2, Volume2 } from "lucide-react";
 import {
   categories,
   ingredients,
@@ -284,7 +277,7 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
             </div>
             {"english" in record && record.telugu && (
               <button
-                className="catalogue-speak"
+                className="catalogue-speak inline-flex items-center justify-center"
                 onClick={() => speak(record)}
                 aria-label={`${speaking === record.id ? "Stop" : "Hear"} ${record.english} in Telugu`}
               >
@@ -295,11 +288,15 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
                 )}
               </button>
             )}
-            <button onClick={() => openDialog(record)} disabled={saving}>
+            <button
+              className="inline-flex items-center justify-center"
+              onClick={() => openDialog(record)}
+              disabled={saving}
+            >
               <Pencil size={15} /> Edit
             </button>
             <button
-              className="danger-button"
+              className="danger-button inline-flex items-center justify-center"
               onClick={() => void remove(record)}
               disabled={saving}
             >

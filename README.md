@@ -44,6 +44,9 @@ The public can browse and share recipes. Only the owner (or explicitly authorize
 
 - Vite
 
+- Tailwind CSS for utility-first component styling, with small scoped CSS rules
+  retained where the cookbook's visual system needs custom artwork or animation.
+
 - Static-site deployment to GitHub Pages
 
 - Automated checks, build, and deployment through GitHub Actions
