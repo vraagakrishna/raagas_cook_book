@@ -57,6 +57,7 @@ import { publicAssetUrl } from "../routing/publicAssetUrl";
 import { deleteRecipeFromGitHub } from "../services/githubRecipes";
 import { CataloguePage } from "../components/CataloguePage";
 import { ingredientPronunciationPath } from "../services/pronunciation";
+import { Seo } from "../components/Seo";
 
 const minutes = (value?: number) => {
   if (value == null) return "Not specified";
@@ -157,6 +158,14 @@ function App() {
 
   return (
     <div className="app-shell">
+      <Seo
+        page={route.page}
+        recipe={
+          route.page === "recipe"
+            ? recipeItems.find((recipe) => recipe.id === route.id)
+            : undefined
+        }
+      />
       <Header
         onHome={navigateHome}
         onSection={navigateSection}
