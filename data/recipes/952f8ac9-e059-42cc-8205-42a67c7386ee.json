@@ -1,0 +1,120 @@
+{
+  "id": "952f8ac9-e059-42cc-8205-42a67c7386ee",
+  "name": "Tomato Toor Dhal",
+  "categoryId": "cat-curry",
+  "teacherId": "teacher-amma",
+  "servings": 4,
+  "difficulty": "easy",
+  "ingredients": [
+    {
+      "ingredientId": "ing-lentil",
+      "quantity": "2 glasses"
+    },
+    {
+      "ingredientId": "ing-garlic-1378ad42",
+      "quantity": "3 cloves",
+      "note": "Crush"
+    },
+    {
+      "ingredientId": "ing-onion",
+      "quantity": "1 large",
+      "note": "Slice into small cubes"
+    },
+    {
+      "ingredientId": "ing-tomato",
+      "quantity": "2 medium",
+      "note": "Slice into small cubes"
+    },
+    {
+      "ingredientId": "ing-curry-leaves-fcb1daf6",
+      "quantity": "Any",
+      "note": "Optional"
+    },
+    {
+      "ingredientId": "ing-chilli",
+      "quantity": "3",
+      "note": "Slice into 2 halves"
+    },
+    {
+      "ingredientId": "ing-oil-b4b15509",
+      "quantity": "3 table spoons",
+      "note": "Until onions soak"
+    },
+    {
+      "ingredientId": "ing-talimpu-seeds-8d05bd59",
+      "quantity": "1 table spoon"
+    },
+    {
+      "ingredientId": "ing-coriander",
+      "quantity": "Any"
+    },
+    {
+      "ingredientId": "ing-chilli-powder-914db51b",
+      "quantity": "1 tablespoon"
+    },
+    {
+      "ingredientId": "ing-salt-88e59097",
+      "quantity": "1 tea spoon"
+    },
+    {
+      "ingredientId": "ing-turmeric-powder-a60550b4",
+      "quantity": "1 tea spoon"
+    }
+  ],
+  "steps": [
+    {
+      "id": "26f2aae3-a76d-4c01-afaf-43e9104d7976",
+      "instruction": "Wash dall in cooker"
+    },
+    {
+      "id": "aeb8e5fb-6823-4164-9641-d54453628f93",
+      "instruction": "add onion, tomato, chillies and chilli powder"
+    },
+    {
+      "id": "7808dbfe-9dba-4cd4-86c3-401fade7d87f",
+      "instruction": "Put whistle"
+    },
+    {
+      "id": "a19c012e-b408-4fbc-91bd-c864784b3866",
+      "instruction": "Turn on stove, medium flame"
+    },
+    {
+      "id": "0dbb3e8f-300f-487a-a882-54368d7d33ff",
+      "instruction": "Wait for 6 whistles"
+    },
+    {
+      "id": "57111312-4d82-4d88-92b6-1b379f8327f6",
+      "instruction": "Cooker cool avvali."
+    },
+    {
+      "id": "ebc059f8-03be-4a70-be13-1b19f4e896c2",
+      "instruction": "Popu cheyyali"
+    },
+    {
+      "id": "f0e4b586-3bd4-424b-9368-06d6c5cf4615",
+      "instruction": "Oil hot chesi thalimpu seeds veyyali"
+    },
+    {
+      "id": "21c81410-4c4e-4954-931c-5c21df2766e8",
+      "instruction": "After crush garlic add cheyyali"
+    },
+    {
+      "id": "746394d1-a386-4dba-8be4-ae748c968144",
+      "instruction": "Add curry leaves."
+    },
+    {
+      "id": "952841f6-f6df-4c4c-92a5-91fc1773c726",
+      "instruction": "Add coriander"
+    },
+    {
+      "id": "0c07adae-2104-44ab-94a4-1117b95f3877",
+      "instruction": "Add turmeric powder."
+    },
+    {
+      "id": "f8d718fa-b94d-4fd4-858d-21743070f3fd",
+      "instruction": "Add dall and add salt"
+    }
+  ],
+  "createdAt": "2026-10-29T19:04:21.288Z",
+  "updatedAt": "2026-10-29T19:33:32.246Z"
+}
