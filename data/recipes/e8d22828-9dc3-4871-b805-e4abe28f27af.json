@@ -1,0 +1,108 @@
+{
+  "id": "e8d22828-9dc3-4871-b805-e4abe28f27af",
+  "name": "Onion Scramble egg",
+  "categoryId": "cat-curry",
+  "teacherId": "teacher-amma",
+  "servings": 4,
+  "difficulty": "easy",
+  "ingredients": [
+    {
+      "ingredientId": "ing-onion",
+      "quantity": "2 big",
+      "note": "Cut small pieces"
+    },
+    {
+      "ingredientId": "ing-talimpu-seeds-8d05bd59",
+      "quantity": "1 table spoon"
+    },
+    {
+      "ingredientId": "ing-ginger-garlic-paste-aad4bbdf",
+      "quantity": "1 tea spoon"
+    },
+    {
+      "ingredientId": "ing-chilli-powder-914db51b",
+      "quantity": "1 table spoon"
+    },
+    {
+      "ingredientId": "ing-turmeric-powder-a60550b4",
+      "quantity": "Tea spoon"
+    },
+    {
+      "ingredientId": "ing-tomato",
+      "quantity": "1 medium",
+      "note": "Wash and cut small pieces"
+    },
+    {
+      "ingredientId": "ing-curry-leaves-fcb1daf6",
+      "quantity": "1"
+    },
+    {
+      "ingredientId": "ing-coriander",
+      "quantity": "Any"
+    },
+    {
+      "ingredientId": "ing-egg-5a06fe01",
+      "quantity": "5"
+    }
+  ],
+  "steps": [
+    {
+      "id": "e8296d6f-364a-4117-bedf-38a16dd88641",
+      "instruction": "Take Kadai stove on"
+    },
+    {
+      "id": "d20bd4f2-75ec-4eec-bb8d-9917791e9a77",
+      "instruction": "Put oil  hot"
+    },
+    {
+      "id": "0786f3e8-db52-44b9-9375-56a654f829fe",
+      "instruction": "Add thalimpu seeds"
+    },
+    {
+      "id": "ccf046bf-9aeb-4c71-856f-949bed1a5ed5",
+      "instruction": "Next add onion,  curry"
+    },
+    {
+      "id": "cc19dea0-e21c-414d-9c67-c78f40c703ee",
+      "instruction": "Until golden brown"
+    },
+    {
+      "id": "1b89aa3e-2b22-461d-a155-c357349adf1c",
+      "instruction": "Add ginger garlic paste. fry 2 minutes"
+    },
+    {
+      "id": "a25515c8-51cd-4a1f-930b-8fae377dba65",
+      "instruction": "Add turmeric powder"
+    },
+    {
+      "id": "41e48b3a-d74a-47ce-9d22-e6f918b3d368",
+      "instruction": "Add tomato"
+    },
+    {
+      "id": "38e2e0ae-a002-43af-800b-77f5ad39b619",
+      "instruction": "Cook tomato 5 minutes"
+    },
+    {
+      "id": "21757d99-0738-4669-aa10-07d6d39a309f",
+      "instruction": "Add chilli powder,  salt, garam  masala, coriander powder"
+    },
+    {
+      "id": "8ba980ce-cab8-44df-ad70-40d98f405f42",
+      "instruction": "Add eggs"
+    },
+    {
+      "id": "707a2245-b9cc-40c4-8d94-c2e82a49b0a1",
+      "instruction": "Cooked well . Stove off"
+    },
+    {
+      "id": "281950e5-be6f-4196-b601-3f245be9731b",
+      "instruction": "Taste it"
+    }
+  ],
+  "createdAt": "2026-10-30T14:02:29.871Z",
+  "updatedAt": "2026-10-30T14:16:12.667Z",
+  "prepDurationMinutes": 30,
+  "waitingDurationMinutes": 15,
+  "cookDurationMinutes": 15,
+  "totalDurationMinutes": 60
+}
