@@ -356,11 +356,12 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
                 </small>
               )}
             </div>
-            {"english" in record && record.telugu && (
+            {"english" in record &&
+              (record.telugu || record.teluguInEnglish) && (
               <button
                 className="catalogue-speak inline-flex items-center justify-center"
                 onClick={() => speak(record)}
-                aria-label={`${speaking === record.id ? "Stop" : "Hear"} ${record.english} in Telugu`}
+                aria-label={`${speaking === record.id ? "Stop" : "Hear"} the pronunciation of ${record.english}`}
               >
                 {speaking === record.id ? (
                   <Square size={15} />
@@ -368,7 +369,7 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
                   <Volume2 size={15} />
                 )}
               </button>
-            )}
+              )}
             <button
               className="inline-flex items-center justify-center"
               onClick={() => openDialog(record)}
