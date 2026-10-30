@@ -1,0 +1,86 @@
+{
+  "id": "b43576bd-824a-454d-987e-fdda627787a4",
+  "name": "Beans curry",
+  "categoryId": "cat-curry",
+  "teacherId": "teacher-amma",
+  "servings": 3,
+  "difficulty": "easy",
+  "ingredients": [
+    {
+      "ingredientId": "ingredient-green-beans-3caf7e",
+      "quantity": "500 gr",
+      "note": "Wash and cut small pieces"
+    },
+    {
+      "ingredientId": "ing-onion",
+      "quantity": "Small",
+      "note": "Cut small pieces"
+    },
+    {
+      "ingredientId": "ing-chilli",
+      "quantity": "8",
+      "note": "Wash and cut"
+    },
+    {
+      "ingredientId": "ing-curry-leaves-fcb1daf6",
+      "quantity": "1",
+      "note": "Wash"
+    },
+    {
+      "ingredientId": "ing-talimpu-seeds-8d05bd59",
+      "quantity": "1 tea spoon"
+    },
+    {
+      "ingredientId": "ing-oil-b4b15509",
+      "quantity": "1 tea spoon"
+    },
+    {
+      "ingredientId": "ing-salt-88e59097",
+      "quantity": "2 tea spoon"
+    },
+    {
+      "ingredientId": "ing-turmeric-powder-a60550b4",
+      "quantity": "1 tea spoon"
+    }
+  ],
+  "steps": [
+    {
+      "id": "2f5aaf1c-bc5d-4dec-891b-27e15ed87b88",
+      "instruction": "Wash and cut small pieces.  Take  cooker put oil stove on."
+    },
+    {
+      "id": "f83bc844-a67a-41ba-8235-82e9a2c2927e",
+      "instruction": "Add thalimpu seeds"
+    },
+    {
+      "id": "10d030fd-4237-414b-8581-c8296cb2ab64",
+      "instruction": "Next add onion,  curry leaves,  chili"
+    },
+    {
+      "id": "cf7b5629-a9c7-4d1a-a9f3-d23ebf45c736",
+      "instruction": "Light golden brown add turmeric powder."
+    },
+    {
+      "id": "50fa269c-5881-4187-a620-9f6f02a67e40",
+      "instruction": "Add beans  , salt"
+    },
+    {
+      "id": "94047da5-b401-4c39-a68c-d4c5f38b8bba",
+      "instruction": "Add little bit water put whistle"
+    },
+    {
+      "id": "082512fe-9daa-4a86-b866-c9c5d8734684",
+      "instruction": "One whistle"
+    },
+    {
+      "id": "89296e48-5493-4124-a47b-e639ae86bda4",
+      "instruction": "Stove off. Salt to taste."
+    }
+  ],
+  "createdAt": "2026-10-29T19:38:00.060Z",
+  "updatedAt": "2026-10-30T14:02:13.173Z",
+  "prepDurationMinutes": 30,
+  "waitingDurationMinutes": 5,
+  "cookDurationMinutes": 10,
+  "totalDurationMinutes": 45
+}
