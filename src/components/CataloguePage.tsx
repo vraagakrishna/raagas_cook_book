@@ -38,7 +38,7 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [errorField, setErrorField] = useState<
-    "name" | "telugu" | "transliteration" | "image" | null
+    "name" | "transliteration" | "image" | null
   >(null);
   const [saving, setSaving] = useState(false);
   const [speaking, setSpeaking] = useState<string | null>(null);
@@ -55,7 +55,6 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
   const [page, setPage] = useState(1);
   const itemsPerPage = 20;
   const nameInputRef = useRef<HTMLInputElement | null>(null);
-  const teluguInputRef = useRef<HTMLInputElement | null>(null);
   const transliterationInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   useDialogDismiss(dialogOpen, () => setDialogOpen(false));
@@ -178,12 +177,6 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
       nameInputRef.current?.focus();
       return;
     }
-    if (kind === "ingredients" && !newTelugu.trim()) {
-      setError("Enter the ingredient name in Telugu.");
-      setErrorField("telugu");
-      teluguInputRef.current?.focus();
-      return;
-    }
     if (kind === "ingredients" && !newTransliteration.trim()) {
       setError("Enter the Telugu name in English so it can be read.");
       setErrorField("transliteration");
@@ -232,9 +225,7 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
             id,
             english: value,
             ...(newTelugu.trim() ? { telugu: newTelugu.trim() } : {}),
-            ...(newTransliteration.trim()
-              ? { teluguInEnglish: newTransliteration.trim() }
-              : {}),
+            teluguInEnglish: newTransliteration.trim(),
             ...(image ? { image } : {}),
           }
         : { id, name: value };
@@ -475,23 +466,12 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
             {kind === "ingredients" && (
               <>
                 <label>
-                  <span>Telugu *</span>
+                  <span>Telugu</span>
                   <input
-                    ref={teluguInputRef}
                     value={newTelugu}
-                    required
-                    aria-required="true"
-                    className={errorField === "telugu" ? "input-error" : ""}
                     placeholder="Example: పచ్చి మిరపకాయ"
-                    onChange={(e) => {
-                      setNewTelugu(e.target.value);
-                      setError("");
-                      setErrorField(null);
-                    }}
+                    onChange={(e) => setNewTelugu(e.target.value)}
                   />
-                  {error && errorField === "telugu" && (
-                    <small className="field-error">{error}</small>
-                  )}
                 </label>
                 <label>
                   <span>Telugu in English *</span>

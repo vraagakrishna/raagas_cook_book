@@ -5,6 +5,13 @@ import {
   recipes,
   teachers,
 } from "../src/services/catalogue";
+import type { Ingredient } from "../src/types/models";
+
+const ingredientFiles = import.meta.glob<Ingredient>(
+  "../data/ingredients/*.json",
+  { eager: true, import: "default" },
+);
+const repositoryIngredients = Object.values(ingredientFiles);
 
 describe("recipe catalogue", () => {
   it("has unique stable IDs and one record per file", () => {
@@ -40,14 +47,15 @@ describe("recipe catalogue", () => {
     });
   });
 
-  it("provides readable English transliteration for Telugu ingredient names", () => {
-    ingredients
-      .filter((ingredient) => ingredient.telugu)
-      .forEach((ingredient) => {
-        expect(
-          ingredient.teluguInEnglish?.trim(),
-          `Ingredient "${ingredient.english}" (${ingredient.id}) is missing its English transliteration`,
-        ).toBeTruthy();
-      });
+  it("provides readable English transliteration for every ingredient", () => {
+    const invalidIngredients = repositoryIngredients.flatMap((ingredient) => {
+      return !ingredient.teluguInEnglish?.trim()
+        ? [
+            `Ingredient "${ingredient.english}" (${ingredient.id}) is missing Telugu in English`,
+          ]
+        : [];
+    });
+
+    expect(invalidIngredients, invalidIngredients.join("\n")).toEqual([]);
   });
 });

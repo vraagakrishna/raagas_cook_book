@@ -1162,11 +1162,10 @@ function CatalogueManager({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const nameInputRef = useRef<HTMLInputElement | null>(null);
-  const teluguInputRef = useRef<HTMLInputElement | null>(null);
   const transliterationInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [errorField, setErrorField] = useState<
-    "name" | "telugu" | "transliteration" | "image" | null
+    "name" | "transliteration" | "image" | null
   >(null);
   const label = mode === "ingredient" ? "ingredient" : mode;
   const readImage = (file?: File) => {
@@ -1182,12 +1181,6 @@ function CatalogueManager({
       setError(`Enter a ${label} name.`);
       setErrorField("name");
       nameInputRef.current?.focus();
-      return;
-    }
-    if (mode === "ingredient" && !telugu.trim()) {
-      setError("Enter the ingredient name in Telugu.");
-      setErrorField("telugu");
-      teluguInputRef.current?.focus();
       return;
     }
     if (mode === "ingredient" && !transliteration.trim()) {
@@ -1248,9 +1241,7 @@ function CatalogueManager({
             id,
             english: trimmedName,
             ...(telugu.trim() ? { telugu: telugu.trim() } : {}),
-            ...(transliteration.trim()
-              ? { teluguInEnglish: transliteration.trim() }
-              : {}),
+            teluguInEnglish: transliteration.trim(),
             ...(image ? { image } : {}),
           }
         : { id, name: trimmedName };
@@ -1316,24 +1307,13 @@ function CatalogueManager({
         {mode === "ingredient" && (
           <>
             <label>
-              <span>Telugu name *</span>
+              <span>Telugu name</span>
               <input
-                ref={teluguInputRef}
                 value={telugu}
-                required
-                aria-required="true"
-                className={errorField === "telugu" ? "input-error" : ""}
-                onChange={(event) => {
-                  setTelugu(event.target.value);
-                  setError("");
-                  setErrorField(null);
-                }}
+                onChange={(event) => setTelugu(event.target.value)}
                 placeholder="Example: పచ్చి మిరపకాయ"
                 disabled={saving}
               />
-              {error && errorField === "telugu" && (
-                <small className="field-error">{error}</small>
-              )}
             </label>
             <label>
               <span>Telugu in English *</span>
