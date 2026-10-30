@@ -1162,10 +1162,11 @@ function CatalogueManager({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const nameInputRef = useRef<HTMLInputElement | null>(null);
+  const teluguInputRef = useRef<HTMLInputElement | null>(null);
   const transliterationInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [errorField, setErrorField] = useState<
-    "name" | "transliteration" | "image" | null
+    "name" | "telugu" | "transliteration" | "image" | null
   >(null);
   const label = mode === "ingredient" ? "ingredient" : mode;
   const readImage = (file?: File) => {
@@ -1183,7 +1184,13 @@ function CatalogueManager({
       nameInputRef.current?.focus();
       return;
     }
-    if (mode === "ingredient" && telugu.trim() && !transliteration.trim()) {
+    if (mode === "ingredient" && !telugu.trim()) {
+      setError("Enter the ingredient name in Telugu.");
+      setErrorField("telugu");
+      teluguInputRef.current?.focus();
+      return;
+    }
+    if (mode === "ingredient" && !transliteration.trim()) {
       setError("Enter the Telugu name in English so it can be read.");
       setErrorField("transliteration");
       transliterationInputRef.current?.focus();
@@ -1218,6 +1225,7 @@ function CatalogueManager({
       .toLocaleLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "")}-${crypto.randomUUID().slice(0, 8)}`;
+    setSaving(true);
     let image: string | undefined;
     if (mode === "ingredient" && imageFile) {
       try {
@@ -1230,6 +1238,7 @@ function CatalogueManager({
         );
         setErrorField("image");
         imageInputRef.current?.focus();
+        setSaving(false);
         return;
       }
     }
@@ -1245,7 +1254,6 @@ function CatalogueManager({
             ...(image ? { image } : {}),
           }
         : { id, name: trimmedName };
-    setSaving(true);
     try {
       const records = [...list, record];
       if (mode === "ingredient") {
@@ -1308,30 +1316,32 @@ function CatalogueManager({
         {mode === "ingredient" && (
           <>
             <label>
-              <span>Telugu name</span>
+              <span>Telugu name *</span>
               <input
+                ref={teluguInputRef}
                 value={telugu}
+                required
+                aria-required="true"
+                className={errorField === "telugu" ? "input-error" : ""}
                 onChange={(event) => {
                   setTelugu(event.target.value);
-                  if (
-                    !event.target.value.trim() &&
-                    errorField === "transliteration"
-                  ) {
-                    setError("");
-                    setErrorField(null);
-                  }
+                  setError("");
+                  setErrorField(null);
                 }}
                 placeholder="Example: పచ్చి మిరపకాయ"
                 disabled={saving}
               />
+              {error && errorField === "telugu" && (
+                <small className="field-error">{error}</small>
+              )}
             </label>
             <label>
-              <span>Telugu in English{telugu.trim() ? " *" : ""}</span>
+              <span>Telugu in English *</span>
               <input
                 ref={transliterationInputRef}
                 value={transliteration}
-                required={Boolean(telugu.trim())}
-                aria-required={Boolean(telugu.trim())}
+                required
+                aria-required="true"
                 className={
                   errorField === "transliteration" ? "input-error" : ""
                 }
@@ -1381,7 +1391,7 @@ function CatalogueManager({
             ) : (
               <Save size={15} />
             )}{" "}
-            Save {label}
+            {saving ? `Saving ${label}…` : `Save ${label}`}
           </button>
         </div>
       </div>

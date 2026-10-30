@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  LoaderCircle,
   Pencil,
   Plus,
   Square,
@@ -37,7 +38,7 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [errorField, setErrorField] = useState<
-    "name" | "transliteration" | "image" | null
+    "name" | "telugu" | "transliteration" | "image" | null
   >(null);
   const [saving, setSaving] = useState(false);
   const [speaking, setSpeaking] = useState<string | null>(null);
@@ -54,6 +55,7 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
   const [page, setPage] = useState(1);
   const itemsPerPage = 20;
   const nameInputRef = useRef<HTMLInputElement | null>(null);
+  const teluguInputRef = useRef<HTMLInputElement | null>(null);
   const transliterationInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   useDialogDismiss(dialogOpen, () => setDialogOpen(false));
@@ -176,11 +178,13 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
       nameInputRef.current?.focus();
       return;
     }
-    if (
-      kind === "ingredients" &&
-      newTelugu.trim() &&
-      !newTransliteration.trim()
-    ) {
+    if (kind === "ingredients" && !newTelugu.trim()) {
+      setError("Enter the ingredient name in Telugu.");
+      setErrorField("telugu");
+      teluguInputRef.current?.focus();
+      return;
+    }
+    if (kind === "ingredients" && !newTransliteration.trim()) {
       setError("Enter the Telugu name in English so it can be read.");
       setErrorField("transliteration");
       transliterationInputRef.current?.focus();
@@ -205,6 +209,7 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
         value.toLocaleLowerCase().replace(/[^a-z0-9]+/g, "-") +
         "-" +
         crypto.randomUUID().slice(0, 6);
+    setSaving(true);
     let image = newImage.trim() || undefined;
     if (kind === "ingredients" && newImageFile) {
       try {
@@ -217,6 +222,7 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
         );
         setErrorField("image");
         imageInputRef.current?.focus();
+        setSaving(false);
         return;
       }
     }
@@ -469,28 +475,31 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
             {kind === "ingredients" && (
               <>
                 <label>
-                  <span>Telugu</span>
+                  <span>Telugu *</span>
                   <input
+                    ref={teluguInputRef}
                     value={newTelugu}
+                    required
+                    aria-required="true"
+                    className={errorField === "telugu" ? "input-error" : ""}
                     placeholder="Example: పచ్చి మిరపకాయ"
                     onChange={(e) => {
                       setNewTelugu(e.target.value);
-                      if (!e.target.value.trim() && errorField === "transliteration") {
-                        setError("");
-                        setErrorField(null);
-                      }
+                      setError("");
+                      setErrorField(null);
                     }}
                   />
+                  {error && errorField === "telugu" && (
+                    <small className="field-error">{error}</small>
+                  )}
                 </label>
                 <label>
-                  <span>
-                    Telugu in English{newTelugu.trim() ? " *" : ""}
-                  </span>
+                  <span>Telugu in English *</span>
                   <input
                     ref={transliterationInputRef}
                     value={newTransliteration}
-                    required={Boolean(newTelugu.trim())}
-                    aria-required={Boolean(newTelugu.trim())}
+                    required
+                    aria-required="true"
                     className={
                       errorField === "transliteration" ? "input-error" : ""
                     }
@@ -537,7 +546,9 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
                 onClick={() => void saveDialog()}
                 disabled={saving}
               >
-                Save
+                {saving && <LoaderCircle className="spin" size={15} />} {saving
+                  ? "Saving…"
+                  : "Save"}
               </button>
             </div>
           </section>
