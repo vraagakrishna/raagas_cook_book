@@ -1217,7 +1217,10 @@ function RecipeDetail({
               <h2>Ingredients</h2>
             </div>
             {recipe.ingredients.some(
-              (item) => ingredientById(item.ingredientId)?.telugu,
+              (item) => {
+                const ingredient = ingredientById(item.ingredientId);
+                return ingredient?.telugu || ingredient?.teluguInEnglish;
+              },
             ) && (
               <div className="pronunciation-controls">
                 <button
@@ -1225,14 +1228,20 @@ function RecipeDetail({
                     playPronunciation(
                       recipe.ingredients
                         .map(
-                          (item) => ingredientById(item.ingredientId)?.telugu,
+                          (item) => {
+                            const ingredient = ingredientById(item.ingredientId);
+                            return (
+                              ingredient?.telugu ??
+                              ingredient?.teluguInEnglish
+                            );
+                          },
                         )
                         .filter(Boolean)
                         .join(", "),
                       recipe.ingredients
                         .map((item) => ingredientById(item.ingredientId))
                         .filter((item): item is Ingredient =>
-                          Boolean(item?.telugu),
+                          Boolean(item?.telugu || item?.teluguInEnglish),
                         )
                         .map(ingredientPronunciationPath),
                     )
@@ -1305,27 +1314,32 @@ function RecipeDetail({
                       />
                     )}
                     <strong>{ingredient?.english}</strong>
-                    {ingredient?.telugu && (
+                    {(ingredient?.telugu || ingredient?.teluguInEnglish) && (
                       <span className="telugu">
-                        <span>{ingredient.telugu}</span>
+                        {ingredient.telugu && <span>{ingredient.telugu}</span>}
                         {ingredient.teluguInEnglish && (
                           <em>{ingredient.teluguInEnglish}</em>
                         )}
-                        <button
-                          onClick={() =>
-                            playPronunciation(
-                              ingredient.telugu!,
-                              ingredientPronunciationPath(ingredient),
-                            )
-                          }
-                          aria-label={`Hear the Telugu pronunciation of ${ingredient.english}`}
-                        >
-                          {speakingText === ingredient.telugu ? (
-                            <Square size={12} />
-                          ) : (
-                            <Volume2 size={14} />
-                          )}
-                        </button>
+                        {(ingredient.telugu || ingredient.teluguInEnglish) && (
+                          <button
+                            onClick={() =>
+                              playPronunciation(
+                                ingredient.telugu ??
+                                  ingredient.teluguInEnglish!,
+                                ingredientPronunciationPath(ingredient),
+                              )
+                            }
+                            aria-label={`Hear the pronunciation of ${ingredient.english}`}
+                          >
+                            {speakingText ===
+                            (ingredient.telugu ??
+                              ingredient.teluguInEnglish) ? (
+                              <Square size={12} />
+                            ) : (
+                              <Volume2 size={14} />
+                            )}
+                          </button>
+                        )}
                       </span>
                     )}
                     {entry.note && <small>{entry.note}</small>}

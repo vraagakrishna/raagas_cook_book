@@ -14,8 +14,10 @@ const outputDirectory = "public/audio/ingredients";
 await mkdir(outputDirectory, { recursive: true });
 
 for (const ingredient of ingredients) {
-  if (!ingredient.telugu) continue;
-  const base64 = await getAudioBase64(ingredient.telugu, {
+  const pronunciationText =
+    ingredient.telugu?.trim() || ingredient.teluguInEnglish?.trim();
+  if (!pronunciationText) continue;
+  const base64 = await getAudioBase64(pronunciationText, {
     lang: "te",
     slow: false,
     timeout: 20000,

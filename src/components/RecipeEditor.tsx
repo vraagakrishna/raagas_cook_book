@@ -1162,8 +1162,11 @@ function CatalogueManager({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const nameInputRef = useRef<HTMLInputElement | null>(null);
+  const transliterationInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
-  const [errorField, setErrorField] = useState<"name" | "image" | null>(null);
+  const [errorField, setErrorField] = useState<
+    "name" | "transliteration" | "image" | null
+  >(null);
   const label = mode === "ingredient" ? "ingredient" : mode;
   const readImage = (file?: File) => {
     if (!file) return;
@@ -1178,6 +1181,12 @@ function CatalogueManager({
       setError(`Enter a ${label} name.`);
       setErrorField("name");
       nameInputRef.current?.focus();
+      return;
+    }
+    if (mode === "ingredient" && telugu.trim() && !transliteration.trim()) {
+      setError("Enter the Telugu name in English so it can be read.");
+      setErrorField("transliteration");
+      transliterationInputRef.current?.focus();
       return;
     }
     const list =
@@ -1302,19 +1311,41 @@ function CatalogueManager({
               <span>Telugu name</span>
               <input
                 value={telugu}
-                onChange={(event) => setTelugu(event.target.value)}
-                placeholder="Optional Telugu script"
+                onChange={(event) => {
+                  setTelugu(event.target.value);
+                  if (
+                    !event.target.value.trim() &&
+                    errorField === "transliteration"
+                  ) {
+                    setError("");
+                    setErrorField(null);
+                  }
+                }}
+                placeholder="Example: పచ్చి మిరపకాయ"
                 disabled={saving}
               />
             </label>
             <label>
-              <span>Telugu in English</span>
+              <span>Telugu in English{telugu.trim() ? " *" : ""}</span>
               <input
+                ref={transliterationInputRef}
                 value={transliteration}
-                onChange={(event) => setTransliteration(event.target.value)}
-                placeholder="Optional readable pronunciation"
+                required={Boolean(telugu.trim())}
+                aria-required={Boolean(telugu.trim())}
+                className={
+                  errorField === "transliteration" ? "input-error" : ""
+                }
+                onChange={(event) => {
+                  setTransliteration(event.target.value);
+                  setError("");
+                  setErrorField(null);
+                }}
+                placeholder="Example: Pachchi mirapakaaya"
                 disabled={saving}
               />
+              {error && errorField === "transliteration" && (
+                <small className="field-error">{error}</small>
+              )}
             </label>
             <div className="catalogue-image-field">
               <span>Ingredient image</span>

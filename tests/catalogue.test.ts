@@ -44,7 +44,10 @@ describe("recipe catalogue", () => {
     ingredients
       .filter((ingredient) => ingredient.telugu)
       .forEach((ingredient) => {
-        expect(ingredient.teluguInEnglish?.trim()).toBeTruthy();
+        expect(
+          ingredient.teluguInEnglish?.trim(),
+          `Ingredient "${ingredient.english}" (${ingredient.id}) is missing its English transliteration`,
+        ).toBeTruthy();
       });
   });
 });

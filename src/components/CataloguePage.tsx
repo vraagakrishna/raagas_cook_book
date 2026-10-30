@@ -36,7 +36,9 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [errorField, setErrorField] = useState<"name" | "image" | null>(null);
+  const [errorField, setErrorField] = useState<
+    "name" | "transliteration" | "image" | null
+  >(null);
   const [saving, setSaving] = useState(false);
   const [speaking, setSpeaking] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -52,6 +54,7 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
   const [page, setPage] = useState(1);
   const itemsPerPage = 20;
   const nameInputRef = useRef<HTMLInputElement | null>(null);
+  const transliterationInputRef = useRef<HTMLInputElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   useDialogDismiss(dialogOpen, () => setDialogOpen(false));
   const records = lists[kind] as (Ingredient | MasterRecord)[];
@@ -171,6 +174,16 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
       setError("Enter a name first.");
       setErrorField("name");
       nameInputRef.current?.focus();
+      return;
+    }
+    if (
+      kind === "ingredients" &&
+      newTelugu.trim() &&
+      !newTransliteration.trim()
+    ) {
+      setError("Enter the Telugu name in English so it can be read.");
+      setErrorField("transliteration");
+      transliterationInputRef.current?.focus();
       return;
     }
     if (
@@ -459,15 +472,38 @@ export function CataloguePage({ onBack }: { onBack: () => void }) {
                   <span>Telugu</span>
                   <input
                     value={newTelugu}
-                    onChange={(e) => setNewTelugu(e.target.value)}
+                    placeholder="Example: పచ్చి మిరపకాయ"
+                    onChange={(e) => {
+                      setNewTelugu(e.target.value);
+                      if (!e.target.value.trim() && errorField === "transliteration") {
+                        setError("");
+                        setErrorField(null);
+                      }
+                    }}
                   />
                 </label>
                 <label>
-                  <span>Telugu in English</span>
+                  <span>
+                    Telugu in English{newTelugu.trim() ? " *" : ""}
+                  </span>
                   <input
+                    ref={transliterationInputRef}
                     value={newTransliteration}
-                    onChange={(e) => setNewTransliteration(e.target.value)}
+                    required={Boolean(newTelugu.trim())}
+                    aria-required={Boolean(newTelugu.trim())}
+                    className={
+                      errorField === "transliteration" ? "input-error" : ""
+                    }
+                    placeholder="Example: Pachchi mirapakaaya"
+                    onChange={(e) => {
+                      setNewTransliteration(e.target.value);
+                      setError("");
+                      setErrorField(null);
+                    }}
                   />
+                  {error && errorField === "transliteration" && (
+                    <small className="field-error">{error}</small>
+                  )}
                 </label>
                 <div className="catalogue-image-field">
                   <span>Ingredient image</span>
